@@ -1,0 +1,643 @@
+#!/bin/sh
+
+### --------------------------------------------------------------------
+### The contents of this file are subject to the Erlang Public License
+### License, Version 1.0, (the "License"); you may not use this file
+### except in compliance with the License. You may obtain a copy of the
+### License at http://www.eddieware.org/EPL
+###
+### Software distributed under the License is distributed on an "AS IS"
+### basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+### the License for the specific language governing rights and limitations
+### under the License.
+###
+### The Original Code is Eddie-1.0.
+###
+### The Initial Developer of the Original Code is Ericsson Telecom
+### AB. Portions created by Ericsson are Copyright (C), 1998, 1999 Ericsson
+### Telecom AB. All Rights Reserved.
+###
+### Author(s): geoff@eddieware.org
+###
+### Jan 2000 - geoff@eddieware.org 
+###     Many updates to make it easier to start/stop/suspend
+###     Particularly aimed at removing ssh/rsh dependencies
+###     And allow rc.local to be used to start it up.
+###
+### Sep 99 - geoff@eddieware.org 
+###     New script and startup procedure
+###
+### Nov 99 - geoff@eddieware.org
+###     Extensive changes; lots moved in oam.erl
+###
+### $Id: start.src,v 1.1 2000/10/27 22:20:26 dredd Exp $ 
+### $Source: /cvsroot/eddie/eddie/oam/src/start.src,v $ 
+### $Revision: 1.1 $ 
+### $Date: 2000/10/27 22:20:26 $ 
+### $State: Exp $ 
+### --------------------------------------------------------------------
+
+USAGE="Usage: `basename $0` [ Command ] [-vhc] [ Node ]
+
+Commands:
+
+    daemon [Node]  -  start/restart a node (usually from rc.local).
+    suspend [Node] -  Suspend %PRODUCT_CNAME% node, auto restart on config.
+    stop [Node]*   -  Terminate given %PRODUCT_CNAME% node(s), manual restart.
+    status <Node>  -  Get some runtime information about a node.
+    config [Node]  -  Configure / reconfigure a cluster. Must be done initially.
+    kickstart - Start all nodes from a central node, for testing (need rsh/ssh).
+
+Flags:
+
+    -v Verbose ouput. Run in foreground.
+    -h Help. Read this screen
+
+Version: %EDDIE_VSN%
+    
+Note: If Node refers to a remote machine the ssh/rsh command will be used."
+
+
+# No default values anymore (too confusing) 
+
+myname=`basename $0`
+command=$1
+allargs=$*
+verbose=false
+dir=
+verbflag=
+config_file=%SYSCONFDIR%/%PRODUCT_NAME%.conf
+HOME=%LOGDIR%
+export HOME
+
+# Check the args
+
+if [ $# -eq 0 ]
+then
+    # Print usage.
+    printf "%s\n" "$USAGE"
+    exit 1
+fi
+
+if [ $# -ge 1 ]
+then
+    shift `expr $OPTIND`
+
+    while getopts :c:vnhp: c
+    do
+    case $c in
+    c)
+        config_file="$OPTARG";;
+    v)
+        verbflag=-v
+        verbose=true;;
+    h)
+        printf "Options - %s\n" "$USAGE"
+        exit 0;;
+    \?)
+        printf "Options - %s\n" "$USAGE"
+        exit 1;;
+    esac
+    done
+fi
+
+# Read in config file and parse it, don't execute as root because
+# that's a security risk.
+
+if [ ! -r $config_file ]; then
+  echo "ERROR(`basename $0`): $config_file is unreadable to this user."
+  exit 1
+fi
+
+# Ugly hack which works on SunOS when using sh -x
+grep '^.*=.*' $config_file > /tmp/eddie.$$
+. /tmp/eddie.$$
+rm -f /tmp/eddie.$$
+
+# Check who I'm running as (don't run as root).
+
+whom=`%WHOAMI%`
+
+if [ x$whom = xroot ]; then
+    PATH=/bin:/usr/bin
+    # Check a runtime user is defined
+    if [ x$RuntimeUser = x ]; then
+        echo RuntimeUser directive not set in configuration file.
+        echo Terminating: will not execute as root.
+        exit 1
+    fi
+    su $RuntimeUser -c "%SBINDIR%/`basename $0` $allargs" 
+    exit 0
+fi
+
+if [ x$whom != x$RuntimeUser ]; then
+    echo %PRODUCT_CNAME% must be run as the user $RuntimeUser.
+    exit 1
+fi
+
+ERL_CALL="%ERL_CALL%"
+ERL_ROOT=%ERL_ROOT%
+INSTALL_ROOT=%ROOTDIR%
+INSTALL_LIB=$INSTALL_ROOT/lib
+BOOT_OPTS="%BOOT_OPTS%"
+LOADINFO_BOOT="%LOADINFO_BOOT%"
+ERL_OPTS="%ERL_OPTS%"
+REMOTE_SH="%EDDIE_RSH%"
+SBINDIR="%SBINDIR%"
+
+HEART_COMMAND="$SBINDIR/$myname daemon ${1+$@}"
+export HEART_COMMAND
+
+shift `expr $OPTIND - 1`
+#echo $#
+
+# set up the descriptor limit (only on sunos5).
+%LIMIT%
+
+#
+# Setup some path stuff (in case we supply it properly)
+# At start of path so we don't run someone else's naughty scripts..
+#
+
+PATH=$INSTALL_ROOT/bin:$ERL_ROOT/bin:$SBINDIR:/usr/bin:/usr/local/bin:$PATH
+export PATH
+
+#
+# Lots of anal retentive checks. 
+#
+
+if [ -z "$Cookie" ]; then
+    echo "ERROR(`basename $0`): Configuration file must specify a Cookie!"
+    exit 1
+fi
+
+if [ "x$Cookie" = "xdefault" ]; then
+    echo "ERROR(`basename $0`): Configuration file must not have: Cookie=default"
+    exit 1
+fi
+
+
+if [ -z "$MnesiaDirectory" ]; then
+    echo "ERROR(`basename $0`): Configuration file must specify a Mnesia directory!"
+    exit 1
+fi
+
+if [ ! -d $MnesiaDirectory ]
+then
+  echo "ERROR(`basename $0`): $MnesiaDirectory does not exist"
+  exit 1
+fi
+
+if [ ! -r $MnesiaDirectory ]
+then
+  echo "ERROR(`basename $0`): no read permission to $MnesiaDirectory"
+  exit 1
+fi
+
+#
+# Are these really necessary on all nodes?
+#
+
+if [ ! -f $ClusterConfig ]
+then
+  echo "ERROR(`basename $0`): $ClusterConfig does not exist"
+  exit 1
+fi
+
+if [ ! -f $GatewayConfig ]
+then
+  echo "ERROR(`basename $0`): $GatewayConfig does not exist"
+  exit 1
+fi
+
+#
+# Name: stop nodes
+# Purpose: stop a bunch of Erlang nodes
+#
+
+stop_nodes() 
+{
+    for node in $*; do
+        echo "Node: Stopping $node!"
+        $ERL_CALL -sname $node -c $Cookie -a "init stop" > /dev/null 2>&1
+    done
+}
+
+#
+# Name: verbage
+# Purpose: output some stuff if verbose is on
+#
+
+verbage()
+{
+    if [ $1 = true ]; then
+        echo $2
+    fi    
+}
+
+
+wait_for_ok()
+{
+    Cookie=$1
+    node=$2
+    MAX_TRIES=20
+    count=0
+
+    result=`$ERL_CALL -sname $node -c $Cookie -a "oam started" 2>&1`
+
+    while [ "$result" != yes ] && [ $count -lt $MAX_TRIES ]; do
+        result=`$ERL_CALL -sname $node -c $Cookie -a "oam started" 2>&1`
+
+        if [ "$verbose" = "true" ]; then
+            echo $node: $result
+        fi
+
+        count=`expr $count + 1`
+
+        sleep 2
+    done
+
+
+
+    if [ $count -eq $MAX_TRIES ]; then
+        echo Node $node appears to be down.
+    fi
+}
+
+
+#
+# Name: init
+# Purpose: set up Erlang ready for Mnesia schema creation
+#
+
+init()
+{
+    Cookie=$1
+    mnesia_dir=$2
+    gateconf=$3
+    migconf=$4
+    node=$5
+
+    name=`echo $node|sed -e "s/@[^@]*$//"`
+    host=`echo $node|sed -e "s/^[^@]*@//"`
+#    hostn=`hostname`
+#    hostn=`echo $hostn | cut -f1 -d.`
+
+    $ERL_CALL -sname $name -c $Cookie -q > /dev/null 2>&1
+
+    LOG_MF_DIR=$mnesia_dir/%PRODUCT_NAME%_log.$node
+    mkdir -p $LOG_MF_DIR
+
+    if [ "$verbose" = "true" ]; then
+        LOGMETHOD="tty"
+        VERBOSE=
+        VERB=true
+        heart=
+    else
+        LOGMETHOD="{file,%QUOTE%$mnesia_dir/$node.log%QUOTE%}" 
+        VERBOSE="-detached"
+        VERB=false
+        #heart=-heart # too hard to stop cleanly
+        heart=
+    fi
+
+    OPTIONS="-oam dnsonly $DNSonly -oam installroot %QUOTE%$INSTALL_ROOT%QUOTE%"
+
+    # If system hasn't terminated within $SHUTDOWN ms during shutdown it will
+    # be brutally killed.
+    SHUTDOWN=60000
+
+    erl -boot start_sasl -config $INSTALL_ROOT/bin/sys $ERL_OPTS -shutdown_time $SHUTDOWN $heart -s file eval $INSTALL_ROOT/bin/.%PRODUCT_NAME%_path -sname $name -setcookie $Cookie -mnesia dir %QUOTE%$mnesia_dir/db_$node%QUOTE% -load_info log_dir %QUOTE%$dir%QUOTE% verbose $VERB -pz $path -sasl start_prg %HEART_OPEN_QUOTE%$HEART_COMMAND%HEART_CLOSE_QUOTE% -kernel error_logger $LOGMETHOD -sasl error_logger_mf_dir %QUOTE%$LOG_MF_DIR%QUOTE% $OPTIONS -sasl sasl_error_logger $LOGMETHOD $VERBOSE &
+
+    wait_for_ok $Cookie $node
+
+    # Actually this might not be the case
+    verbage $verbose "$node: ok"
+}
+
+
+#
+# Name: start
+# Purpose: actually activate an %PRODUCT_CNAME% node (frontend or backend)
+#
+
+daemon()
+{
+    Cookie=$1
+    dir=$2
+    gateconf=$3
+    migconf=$4
+    firstnode=$5
+
+    # If node not specified - try and find it.
+    if [ x$firstnode = x ]; then
+        allnodes=`grep -i "Node " $migconf | sed -e 's:#.*::' | sed -e 's:[<>]::g' | sed -e 's:[Nn][Oo][Dd][Ee] ::g'`
+        hostn=`hostname`
+        hostn=`echo $hostn | cut -f1 -d.`
+        match=0
+        for i in $allnodes; do
+            case $i in 
+                *@$hostn)
+#                    $SBINDIR/$myname daemon $i &
+                    daemon $1 $2 $3 $4 $5 $i
+                    match=1
+                ;;
+            esac
+        done
+        if [ $match -eq 0 ]; then
+            echo Unable to determine local node name.
+            echo Please edit and specify the node in rc.local
+            echo ie. su eddie -c /usr/local/sbin/eddie daemon fe@$hostn
+            exit 1
+        fi
+        exit 0
+    fi
+
+    echo Re/Starting node $firstnode
+
+    # Change to a writeable directory
+    cd $dir
+
+    # Startup up an erlang node with packages/logging set etc
+    init $Cookie $dir $gateconf $migconf $firstnode 
+}
+
+config()
+{
+    Cookie=$1
+    dir=$2
+    gateconf=$3
+    migconf=$4
+    node=$5
+    
+    # If node not specified - try and find it.
+    allnodes=`grep -i "Node " $migconf | sed -e 's:#.*::' | sed -e 's:[<>]::g' | sed -e 's:[Nn][Oo][Dd][Ee] ::g'`
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+    match=0
+    atomlist=
+
+    for i in $allnodes; do
+        case $i in
+            *@$hostn)
+                mynode=$i
+                match=1
+            ;;
+        esac
+        if [ x$atomlist = x ]; then
+            atomlist=$i
+        else
+            atomlist=$atomlist,$i
+        fi
+    done
+
+    if [ $match -eq 0 ]; then
+    	echo Unable to determine local node name.
+        echo Please edit and specify the node in rc.local
+        echo ie. su eddie -c /usr/local/sbin/eddie daemon fe@$hostn
+        exit 1
+    fi
+
+    if [ x$node = x ]; then
+        node=$mynode
+    fi
+
+    echo Distributing configuration information from $node
+
+    # Actually force a configure locally (read files etc)
+    result=`$ERL_CALL -sname $node -c $Cookie -a "oam bootstrap [%QUOTE%$gateconf%QUOTE%,%QUOTE%$migconf%QUOTE%,[$atomlist]]" 2>&1`
+
+    # Do we need to do more?
+    if [ "$result" != ok ]; then
+        echo Re/configuration failed: $result
+        exit 1
+    fi
+
+    # Wait for to ensure configuration is completed
+    wait_for_ok $Cookie $node
+}
+
+#
+# Name: suspend
+# Purpose: bring a node back down to waiting for a config
+#
+
+suspend()
+{
+    allnodes=$*
+
+    if [ x"$allnodes" = x ]; then
+        allnodes=`grep -i "Node " $ClusterConfig | sed -e 's:#.*::' | sed -e 's:[<>]::g' | sed -e 's:Node ::g'`
+        if [ x"$allnodes" = x ]; then
+            echo Unable to determine nodes to suspend.
+            echo Please specify the node with the command
+            echo ie. eddie suspend fe@eddie 
+            exit 1
+        fi
+    fi
+
+    for i in $allnodes; do
+        result=`$ERL_CALL -sname $i -c $Cookie -a "oam bootsuspend []" 2>&1`
+        echo Result of suspend $i: $result
+    done
+}
+
+#
+# Name: terminate
+# Purpose: totally stop a named node (or try and find them all)
+# 
+
+stop()
+{
+    if [ $# -eq 0 ] || [ x$1 = "xlocal" ]; then
+        # If node not specified - try and find it.
+        allnodes=`grep -i "Node " $ClusterConfig | sed -e 's:#.*::' | sed -e 's:[<>]::g' | sed -e 's:[Nn][Oo][Dd][Ee] ::g'`
+        hostn=`hostname`
+        hostn=`echo $hostn | cut -f1 -d.`
+        match=0
+        for i in $allnodes; do
+            case $i in
+                *@$hostn)
+                    node=$i
+                    match=1
+                    if [ $# -ne 0 ]; then
+                        stopone $i
+                        verbage $verbose "Node: $node stopped !"
+                    fi
+                ;;
+            esac
+        done
+
+        if [ $# -eq 0 ]; then
+            # Stop the cluster
+            result=`$ERL_CALL -sname $node -c $Cookie -a "oam cluster_stop" 2>&1`
+
+#            if [ "$result" != ok ]; then
+#                echo Re/configuration failed: $result
+#                exit 1
+#            fi
+
+            echo Cluster stopped.
+        fi
+    else
+        nodelist=$*
+
+        for node in $nodelist; do
+            stopone $node
+            verbage $verbose "Node: $node stopped !"
+        done
+    fi
+}
+
+
+#
+# Name: stop
+# Purpose: stop %PRODUCT_CNAME% nodes from continued execution.
+#
+
+stopone()
+{
+    node=$1
+
+    result=`$ERL_CALL -sname $node -c $Cookie -a "oam application [servant]" 2>&1`
+
+    if [ "$result" = true ]; then
+        $ERL_CALL -sname $node -c $Cookie -a "servant_server abort" > /dev/null 2>&1
+    else
+        $ERL_CALL -sname $node -c $Cookie -a "init stop" > /dev/null 2>&1
+    fi
+}
+
+#
+# Name: status
+# Purpose: return the current status of a node/cluster
+#
+
+status()
+{
+    node=$1
+
+    echo Status for: $node
+
+    result=`$ERL_CALL -sname $node -c $Cookie -a "master_server status" 2>&1`
+    printf "$result"
+    echo
+
+    result=`$ERL_CALL -sname $node -c $Cookie -a "load_server status" 2>&1`
+    printf "$result"
+    echo
+
+    result=`$ERL_CALL -sname $node -c $Cookie -a "inet_server status" 2>&1`
+    printf "$result"
+    echo
+}
+
+#
+# Name: kickstart
+# Purpose: Basically the "old" start function
+#   Useful for testing - starts everything using rsh/ssh
+#   Therefore not useful under Windows NT.
+#
+
+kickstart()
+{
+    Cookie=$1
+    dir=$2
+    gateconf=$3
+    migconf=$4
+
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+    dumname=dummy$$@$hostn
+
+    # Change to a writeable directory
+    cd $dir
+
+    allnodes=`grep -i "Node " $migconf | sed -e 's:#.*::' | sed -e 's:[<>]::g' | sed -e 's:Node ::g'`
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+    match=0
+    result=
+    for i in $allnodes; do
+        if [ x$result = x ]; then
+                result=$i
+            else
+                result=$result,$i
+            fi
+    done
+
+    echo %PRODUCT_CNAME% nodes listed in config file: $result
+
+    # Find out what nodes we've read from config file
+    nodelist=`echo $result | cut -f1 -d\] | cut -c1- | sed -e "s/[,']/ /g"` 
+
+    # Check to see if we can (RSH/SSH)
+    if [ -z "$REMOTE_SH" ]; then
+        echo You do not appear to have ssh/rsh installed.
+        echo As a result %PRODUCT_CNAME% nodes must be manually started on the following nodes:
+        echo $nodelist
+        echo Login on each machine and execute: \"%PRODUCT_NAME% daemon nodename\"
+        exit 1
+    fi
+
+    # Initialise the other Erlang nodes
+    for node in $nodelist
+    do
+        # Check if remote node is up
+        result=`$ERL_CALL -sname $node -c $Cookie -a "oam started" 2>&1`
+        if [ "$result" != yes ]; then
+            echo Starting remote node on $node
+            remotehost=`echo $node | cut -f2- -d@`
+            $REMOTE_SH $remotehost $myname daemon $node
+            wait_for_ok $Cookie $node
+        fi
+    done
+
+    # Ok - stop the dummy node tooo.
+    $ERL_CALL -sname $dumname -c $Cookie -q > /dev/null 2>&1
+    rm -rf db_$dumname > /dev/null 2>&1
+    rm -f $dumname.log > /dev/null 2>&1
+
+    # Wait
+    #echo Please wait 30 seconds for nodes to settle
+    #sleep 30
+
+    # Initiate boot sequence
+    # And configuring the actual cluster
+    firstnode=`echo $nodelist | cut -f1 -d' '`
+    config $Cookie $dir $gateconf $migconf $firstnode
+}
+
+
+#
+# The main command interpreter.
+# Actually perform the appropriate command in prior functions
+#
+
+if [ x$command != x ] || [ $# -ge 1 ]; then
+
+    # Special operation 
+    case $command in
+        daemon)
+            daemon $Cookie $MnesiaDirectory $GatewayConfig $ClusterConfig $1;;
+        status)
+            status $1;;
+        config)
+            config $Cookie $MnesiaDirectory $GatewayConfig $ClusterConfig $1;;
+        suspend)
+            suspend $* ;;
+        stop)
+            stop $* ;;
+        kickstart)
+            kickstart $Cookie $MnesiaDirectory $GatewayConfig $ClusterConfig $1;;
+        *)
+            printf "%s\n" "$USAGE"
+            exit 1;;
+    esac
+
+else
+    # Print usage.
+    printf "%s\n" "$USAGE"
+    exit 1
+fi
+

@@ -1,0 +1,66 @@
+
+Eddie (1.4.2)
+~~~~~~~~~~~~~
+
+We have recently built Eddie successfully for:
+    * Linux (Redhat 6.x, SuSE 6.x, Mandrake 7.x),
+    * Solaris (2.6.0, 7.0)
+
+Installation directions:
+
+1.  Make sure you have a patched Open Source Erlang installed
+    (http://www.eddieware.org/erlang).
+
+    Ensure "erl" & "erlc" are in your standard path.
+
+2.  Unpack this(!) source archive.
+
+3.  ./configure
+
+    By default Eddie installs itself into:
+        /usr/local/sbin/eddie
+        /usr/local/sbin/lbdns
+        /usr/local/etc/eddie.conf
+        /usr/local/etc/eddie.mig
+        /usr/local/etc/eddie.gate
+        /usr/local/lib/eddie/*
+
+    You may want to change the installation prefix (instead of
+    /usr/local/) by doing a ./configure --prefix <alternate installation prefix>
+
+    Note: RPMs are built with --sysconfdir=/etc/eddie
+
+4.  make
+
+    You must use GNU make. If "make" isn't GNU make then type
+    the appropriate command to invoke GNU make. You must also
+    edit the eddie.mk produced by configure so that the MAKE
+    variable equals "gmake" (or whatever GNU make is on your system).
+
+5.  make install
+
+    This should build Eddie succsessfully. Getting Eddie
+    running requires an understanding of how your want to configure
+    your cluster(s). Please read the documentation in the doc/ subtrees.
+
+    Note: you must install as the 'root' user.
+    As a number of Eddie programs are set uid root (those associated 
+    with interfaces and routes).
+
+    Put $<install prefix>/sbin in your path!
+
+    This process needs to be repeated for each machine you
+    install Eddie on.
+
+
+More information:
+
+A full installation guide is available with other information
+about Eddie at http://www.eddieware.org.
+
+
+Please mail any problems to team@eddieware.org.
+
+geoff@eddieware.org.
+
+

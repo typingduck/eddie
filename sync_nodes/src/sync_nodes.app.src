@@ -1,0 +1,7 @@
+{application,sync_nodes,
+ [{description,"SyncNodes"},
+  {vsn,"%VSN%"},
+  {modules,[sync_nodes_server,sync_nodes_sup,sync_nodes_app]},
+  {registered,[]},
+  {applications,[kernel,stdlib]},
+  {mod,{sync_nodes_app,[]}}]}.

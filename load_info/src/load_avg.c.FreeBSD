@@ -1,0 +1,17 @@
+#include <stdio.h>
+
+/* Get the load average on FreeBSD (last 1 (5 and 15) minutes) */
+
+void main()
+  {
+    double la[3];
+
+    if (getloadavg(&la, 1) == 1) {
+      /* if (getloadavg(&la, 3) == 3) {
+      fprintf(stdout, "%f %f %f\n", la[0], la[1], la[2]); */
+      fprintf(stdout, "%f\n", la[0]);
+    }
+    else {
+      fprintf(stdout, "nothing\n");
+    }
+  }

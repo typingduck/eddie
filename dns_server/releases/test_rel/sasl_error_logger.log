@@ -1,0 +1,147 @@
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,sasl_sup}
+             started: [{pid,<0.32.0>},
+                       {name,alarm_handler},
+                       {mfa,{alarm_handler,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,sasl_sup}
+             started: [{pid,<0.33.0>},
+                       {name,release_handler},
+                       {mfa,{release_handler,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,sasl_sup}
+             started: [{pid,<0.35.0>},
+                       {name,overload},
+                       {mfa,{overload,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+         application: sasl
+          started_at: nonode@nohost
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_domain_sup}
+             started: [{pid,<0.42.0>},
+                       {name,dns_catalog},
+                       {mfa,{dns_catalog,
+                                start_link,
+                                [[{primary,"bistromath.se","bistromath.se"},
+                                  {primary,
+                                      "128.168.198.in-addr.arpa",
+                                      "128.168.198.in-addr.arpa"},
+                                  {primary,
+                                      "127.in-addr.arpa",
+                                      "127.in-addr.arpa"}],
+                                 [{cache,".","/var/named/cache"}]]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,kernel_safe_sup}
+             started: [{pid,<0.45.0>},
+                       {name,timer_server},
+                       {mfa,{timer,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,1000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_domain_sup}
+             started: [{pid,<0.44.0>},
+                       {name,dns_cache},
+                       {mfa,{dns_cache,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_domain_sup}
+             started: [{pid,<0.46.0>},
+                       {name,"bistromath.se"},
+                       {mfa,{dns_zone,start_link,
+                                      ["bistromath.se",
+                                       "bistromath.se",
+                                       "/var/named"]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_domain_sup}
+             started: [{pid,<0.48.0>},
+                       {name,"128.168.198.in-addr.arpa"},
+                       {mfa,{dns_zone,start_link,
+                                      ["128.168.198.in-addr.arpa",
+                                       "128.168.198.in-addr.arpa",
+                                       "/var/named"]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_domain_sup}
+             started: [{pid,<0.50.0>},
+                       {name,"127.in-addr.arpa"},
+                       {mfa,{dns_zone,start_link,
+                                      ["127.in-addr.arpa",
+                                       "127.in-addr.arpa",
+                                       "/var/named"]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_sup}
+             started: [{pid,<0.40.0>},
+                       {name,dns_domain_sup},
+                       {mfa,{dns_domain_sup,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,supervisor}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_sup}
+             started: [{pid,<0.52.0>},
+                       {name,dns_server},
+                       {mfa,{dns_server,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_sup}
+             started: [{pid,<0.55.0>},
+                       {name,dns_load},
+                       {mfa,{dns_load,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,2000},
+                       {child_type,worker}]
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+         application: dns_server
+          started_at: nonode@nohost
+
+=PROGRESS REPORT==== 29-May-1998::06:03:58 ===
+          supervisor: {local,dns_sup}
+             started: [{pid,<0.57.0>},
+                       {name,{dns_tcp_accept,{896,421838,572861}}},
+                       {mfa,{dns_tcp_accept,
+                                start_link,
+                                [{socket,<0.53.0>,#Port,inet_tcp},
+                                 <0.52.0>,
+                                 {896,421838,572861}]}},
+                       {restart_type,temporary},
+                       {shutdown,2000},
+                       {child_type,worker}]

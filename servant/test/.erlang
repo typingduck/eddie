@@ -1,0 +1,14 @@
+code:add_pathz("../../servant-3.0/ebin").
+code:add_pathz("../../master-3.0/ebin").
+code:add_pathz("../../misc-1.0/ebin").
+code:add_pathz("../../oam-1.0/ebin").
+code:add_pathz("../../sync_nodes-1.0/ebin").
+code:add_pathz("../../inet_server/ebin").
+code:add_pathz("../../load_info/ebin").
+code:add_pathz("../../servant-3.0").
+code:add_pathz("../../master-3.0").
+code:add_pathz("../../misc-1.0").
+code:add_pathz("../../oam-1.0").
+code:add_pathz("../../sync_nodes-1.0").
+code:add_pathz("../../inet_server").
+code:add_pathz("../../load_info")

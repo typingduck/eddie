@@ -1,0 +1,12 @@
+# Variabel to be provided
+EDDIE_ROOT=..
+
+include $(EDDIE_ROOT)/eddie.mk
+
+all:
+	cd src;$(MAKE) $(EDDIE_VARS)
+	cd examples;$(MAKE) $(EDDIE_VARS)
+
+clean:
+	cd src;$(MAKE) $(EDDIE_VARS) clean
+	cd examples;$(MAKE) $(EDDIE_VARS) clean

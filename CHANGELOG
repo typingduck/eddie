@@ -1,0 +1,314 @@
+
+Eddie-1.5.0 Changelog
+
+date: 2000/10/1 author: geoff
+    Updates for Erlang-5.0.1 (OTP R7B)
+
+Eddie-1.4.2 Changelog
+
+date: 2000/17/9 authors: geoff, clement, pekka.
+    Slackness filling out this file.
+    Basically some fixes to the lbdns so it can receive a binary format.
+    Gateway now sends a binary - could be replaced by a C agent (for NT).
+    Fixes to migration stuff.
+    Improved C relays (non-blocking). 
+    Some solaris packaging stuff.
+    Script fixes.
+
+date: 2000/2/10 author: geoff
+    Totally rewritten startup mnesia database stuff because it
+    was causing grief with 4.9.1.
+
+date: 2000/2/02 author: rob
+    Rewrote relays to make buffering simpler (and future changes
+    easier). Also fixed an ugly little CGI problem.
+
+date: 2000/1/21 author: pekka
+    DNS fixes.
+
+date: 1999/12/20 author: geoff
+    Many fixes for Erlang 4.9.1
+
+date: 1999/12/07 author: geoff
+    Keep-alive fix for proxies wanting to do keep alive.
+
+date: 1999/12/06 author: pekka
+    Significant DNS patches. It now waits for all spawned children
+    queries a domain to reply. This means parts of DNS records
+    don't get lost (resulting in a problem that appeared to be
+    a cache problem).
+
+date: 1999/12/03 author: geoff
+    Numerous gateway fixes/updates for the new OTP/Erlang release (erts-4.9.1).
+
+date: 1999/11/11 author: pekka
+    Dns overload fixes, poll_pending() removes all EXIT messagages, 
+    even the ones from the parent. The process woud not die properly 
+    when the parent dies, the EXIT could be gone in the slist_loop() then.
+    Delay opening of the udp port until its really needed, i.e. when you
+    send something, not at process startup.  Limit the usage of udp ports 
+    through the new udp tracker module that limits the no of udp ports and 
+    retries to get the udp later if limit is reached.
+
+date: 1999/11/8 author: ttey;
+    Another fix for partitioned network reconciliation.
+
+date: 1999/11/2 author: ttey;
+    A migration fix which ensures the relays go away (they weren't).
+
+date: 1999/10/30 author: ttey;
+    Fixed an infinite event loop type problem occurring in certain
+    (rare) failure circumstances.
+
+date: 1999/10/20 author: rob;
+    Many improvements to keepalive handling.
+
+date: 1999/10/15 author: rob;
+    Many improvements to the way the relay handles buffering.
+    Hopefully children won't kill themselves so often now.
+
+date: 1999/10/04 author: rob;
+    POST fix in relay engine
+
+date: 1999/10/04 author: lawriea@eamail1.unisys.com;  
+    Configuration patches for Slackware 3.6
+
+date: 1999/09/20 author: geoff;  
+    Fixed an ugly typo introduced in Eddie-1.2.0 which stuffed up
+    IP migration. Eric (ttey) actually noticed the crash first.
+
+date: 1999/09/** author: geoff;  
+    Completely re-did the initiation sequence and script front-end
+    to Eddie so its much easier to use.
+
+date: 1999/09/** author: ttey;  
+    Clean up lots of code and rewrote the inet_server stuff 
+    to interface with an external proxy (written by Rob).
+
+    Enjoyed deleting lots of crufty code :)
+
+date: 1999/09/** author: rob;  
+    Completely rewrote the inet_server proxy as a set of C processes:
+      * this enables Eddie to handle many file descriptors
+        (probably OS max).
+      * massively improves Eddie's performance
+      * problems logged to /var/log/messages
+
+date: 1999/09/** author: pekka;  
+    A number of minor bug fixes in the DNS.
+
+date: 1999/08/02 05:14:38;  author: geoff;  
+    Scripting changes for standalone load info server (eddie load directive).
+    New app directory for shared code (lonelb).
+    Modified Makefile.in to support this.
+    Add new boot script in system.
+
+date: 1999/07/29 05:33:20;  author: pekka;  
+    Created standalone load information server module code,
+    this allows the load information server to run independently of
+    the gateway for minimal DNS only setups.
+
+date: 1999/07/12 07:12:15;  author: tobbe;  
+    Added new single configuration interface to OAM tree.
+    Left to do:
+     - get it compiling
+     - Read from Mnesia and fill the datastructures
+     - Store in Mnesia
+     - Write/Read config files
+
+date: 1999/06/29 00:12:48;  author: maurice;  
+    Added error report to log file ... report not running as root
+    Add check to C programs to check that the UID is appropriate
+
+date: 1999/06/21 23:57:42;  author: jon;
+    Changed the queue/reject/blocked responses to be of HTTP version 1.0
+    instead of 1.1 (cannot answer with version 1.1 if client does not send
+    1.1 requests).
+    Added the header: Pragma: no-cache
+    to the queue/blocked/reject and status pages. 
+    These pages should not be cached.
+
+date: 1999/06/15 17:33:36; author jon;
+    I have updated the admission control module (and documentation) so now
+    the maximum number of sessions is actually followed. I have tested the
+    changes quickly and quite a few things seem to work, namely:
+    - maximum number of sessions
+    - maximum number in the queue
+    - order of queueing people getting access (FIFO)
+    - never & always admit IP's
+    - queue/reject/blocked pages
+    - session time
+
+date: 1999/06/01 12:13:12; author geoff;
+    Removed estart,estop, etc and created a single
+    'eddie' script to drive Eddie. Various script fixes & updates.
+    Makefile updates to separate installable components and use 
+    install-sh.
+
+date: 1999/05/17 00:47:35;  author: jon;  
+    The request part of a job is no longer a binary, instead it is a list of
+    lists. Since the request is checked in these modeles in case clauses,
+    the request has to be flattened into one list (lists:flatten).
+
+date: 1999/05/13 04:29:55;  author: jon;  
+    Changed the load information displayed when using estatus. It now shows the
+    Node_load as received from load_server:node_load
+    Also fixed the erlet_*. So now estatus works from netscape as well 
+    (good or not).
+
+date: 1999/05/13 02:36:15;  author: ttey;  
+    Merged NT port.
+
+date: 1999/05/03 00:02:03;  author: mpr;  
+    Documentation update in preparation for release. 
+
+date: 1999/04/27 08:17:27;  author: geoff;  
+    Changes to get log rotating via SIGHUP working.
+    Wrap logs disabled.
+    Seems to be running - log rotation not tested.
+    start_httpd, stop_httpd now go into the bin directory.
+    INSTALL_ROOT appears to work.
+
+date: 1999/04/26 05:11:39;  author: jon;  
+    Changed so that the header 'X-Forwarded-For: <Ip-Address>' is added to
+    the HTTP requests if it is not already in the original request.
+
+date: 1999/04/22 03:57:06;  author: jon;  
+    Bugfixed the GC problem, with accept processes not disappearing.
+    Also changed to remove crashed backends from clients db
+
+date: 1999/04/22 06:56:23;  author: tobbe;  
+    Created a new file queue_srv.erl containing the queue server
+    which previously was located in inet_server.erl. Also started
+    to move around some code in the inet_server.erl. No functional
+    changes was made.
+
+date: 1999/04/22 00:37:07;  author: maurice;  
+    Removed Makefile/bash dependency
+
+date: 1999/04/22 05:12:54;  author: dwyer;  
+    master_server:status/0 now also reports on the ports being used.
+
+date: 1999/04/20 03:53:56;  author: pekka;  
+    dns_sig was started as a supervidor in dns_sup.erl, its not a supervisor
+    and should be started as an worker.
+
+date: 1999/04/19 01:05:48;  author: geoff;  
+    Fixed ifdel problems (including an ugly hack suggested by Tobbe).
+
+date: 1999/04/19 00:42:54;  author: maurice;  
+    Syslog all operations in C
+
+date: 1999/04/19 04:11:00;  author: geoff;  
+    Documentation fixes
+    Created the INSTALL file 
+
+date: 1999/04/16 04:15:32;  author: geoff;  
+    Modified mk_dot_erlang.sh (to system/)
+    Modified the makefile to build a .eddie_path on installation.
+
+date: 1999/04/15 05:01:15;  author: maurice;  
+    Example configurations created 
+
+date: 1999/04/15 04:11:29;  author: geoff;  
+    Ssh support flag (-f) added to configure.in.
+
+date: 1999/04/15 13:52:46;  author: tobbe;  
+    The -c -d switches are now also required for eadd, edel and estatus.
+    Re-arranged some of the code in inet_server.erl which dealt with
+    status information gathering. No functionality has been changed,
+    just some cosmetic improvements....
+
+date: 1999/04/14 03:24:10;  author: dwyer;  
+    Added a TARGET_OS switch for systems (FreeBSD) without libreolv.so
+
+date: 1999/04/14 08:37:25;  author: tobbe;  
+    Made -c and -d mandatory for {config,init,start}.src
+
+date: 1999/04/12 05:24:21;  author: maurice;  
+    Minor fix to allow make / gmake confusion on installation
+    Autoconf fixes for linux
+
+date: 1999/04/12 00:34:11;  author: jon;  
+    Badmatch in http_admit, found bad match in is_db:get_dequeued_size(Db)
+    which returns the number directly and not [{_,Number}]
+
+date: 1999/04/08 06:00:16;  author: geoff;  
+    Oam scripts fixed to use ecmd
+
+date: 1999/04/07 06:57:34;  author: tobbe;  
+    Added ecmd to the top makefile
+
+date: 1999/04/07 07:15:57;  author: geoff;  
+    Fixes to the load server, maintains 12 load averages
+      in 5 second intervals.
+    Defined BROKEN CMSG for linux (works for linux).
+    Changed a load macro which failed on load 0.
+
+date: 1999/04/03 07:53:36;  author: jon;  
+    Added database to remember which BE's a client has been proxied to, in
+    order to send following similar requests to the same BE.
+    Files changed to handle multiple requests and the "chunked"
+    Transfer-Encoding. The syncronization of sending requests to backends 
+      is changed (not tested).
+    Requests that are Transfer-Encoded "chunked" doesn't have to 
+          have footers.
+
+date: 1999/04/01 00:42:14;  author: geoff;  
+    DNS build changes (oam scripts & Makefile)
+
+date: 1999/03/31 06:26:30;  author: jon;  
+    Removed the following files: is_parse.erl, is_base.erl (not used)
+    Removed file http11 (old try to parse http1.1)
+    Also changed include_lib to include in is_core & is_config
+
+date: 1999/03/30 07:15:04;  author: geoff;  
+    Versions cleaned up to be in one place.
+    "make install" added.
+    system directory cleaned out.
+
+date: 1999/03/30 02:32:50;  author: geoff;  
+    Rebuilt eddie start/stop scripts.
+    Fixed install for this; removed eddie_oam.
+    Moved scripts (including start script) into common
+    directory (oam/src/)
+
+date: 1999/03/29 05:44:57;  author: tobbe;  
+    autoconf now testing for gmake, removed autoconf stuff in servants/src
+
+date: 1999/03/25 15:07:29;  author: tobbe;  
+    Configure does some things right now.
+    Still have to tie it in with subdirs like
+    servants/src and the dns_server. Also remove
+    the top definitions in the top-makefile.
+
+date: 1999/03/24 00:01:07;  author: jon;  
+    Restructring done. Body of large requests can be read in parts and sent
+    through to backend. The http module is split into 4 parts, http,
+    http_admit, http_parse and http_proxy
+
+date: 1999/03/10 02:32:14;  author: jon;  
+    The sending of the request(s) to backends is changed since the body is
+    read earlier than before ("has to" since there is no way of telling how
+    large a chunked message is).
+    
+date: 1999/03/09 07:40:38;  author: jon;  
+    http.erl: 
+      Functions to check parsed headers with has been moved to module
+          http_fields (and into one function, get_headers_value).
+          Error handling (of bad requests) has been corrected.
+    http_fields: see above (function added)
+    is_core: Error handling added.
+
+date: 1999/03/03 03:46:05;  author: maurice;  
+    Cleaned up working base for C files and configure
+
+date: 1999/02/23 04:34:29;  author: maurice;  
+    Fixes, extension of servant_server to pass IP address to ifdel
+    Fixes for solaris
+
+date: 1999/01/25 15:49:57;  author: geoff; 
+    Importing into CVS (from ClearCase) the initial public
+    release of Eddie.
+
+

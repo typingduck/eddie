@@ -1,0 +1,9 @@
+{application,lonelb,
+ [{description,"Lonelb"},
+  {vsn,"%VSN%"},
+  {modules,[
+            get_mig_conf
+	    ]},
+  {registered,[]},
+  {applications,[kernel,stdlib,sasl,misc]}
+  ]}.

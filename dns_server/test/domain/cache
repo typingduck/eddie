@@ -1,0 +1,12 @@
+;
+; Last update Fri Mar 22 09:38:47 MET 1996
+; The current version is in ftp://ericom.ericsson.se/iDNS/cache
+;
+.                         99999999 IN NS    ericom.ericsson.se.
+ericom.ericsson.se.       99999999 IN A     130.100.128.25
+.                         99999999 IN NS    dsnsun.ericsson.se.
+dsnsun.ericsson.se.       99999999 IN A     136.225.106.2
+.                         99999999 IN NS    castor.lu.erisoft.se.
+castor.lu.erisoft.se.     99999999 IN A     150.132.144.1
+.                         99999999 IN NS    eua.ericsson.se.
+eua.ericsson.se.          99999999 IN A     134.138.132.16

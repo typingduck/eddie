@@ -1,0 +1,9 @@
+{application,lonelb,
+ [{description,"Syslog"},
+  {vsn,"%VSN%"},
+  {modules,[
+            syslog
+	    ]},
+  {registered,[]},
+  {applications,[kernel,stdlib,sasl,misc]}
+  ]}.

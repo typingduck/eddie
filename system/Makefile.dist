@@ -1,0 +1,21 @@
+EMULATOR=jam
+
+all:
+	cd lib/master;$(MAKE) EMULATOR=$(EMULATOR)
+	cd lib/misc;$(MAKE) EMULATOR=$(EMULATOR)
+	cd lib/oam;$(MAKE) EMULATOR=$(EMULATOR)
+	cd lib/sync_nodes;$(MAKE) EMULATOR=$(EMULATOR)
+	cd lib/servant;$(MAKE) EMULATOR=$(EMULATOR)
+	cd lib/inet_server;$(MAKE) EMULATOR=$(EMULATOR)
+	cd lib/load_info;$(MAKE) EMULATOR=$(EMULATOR)
+	cd examples;$(MAKE) EMULATOR=$(EMULATOR)
+
+clean:
+	cd lib/master;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd lib/misc;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd lib/oam;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd lib/sync_nodes;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd lib/servant;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd lib/inet_server;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd lib/load_info;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd examples;$(MAKE) EMULATOR=$(EMULATOR) clean

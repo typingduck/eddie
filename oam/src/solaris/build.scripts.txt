@@ -1,0 +1,378 @@
+Build Scripts
+-------------
+
+Author: 	Jon Holdsworth  jon@central.warehouse.net  jon@eddieware.org
+Updated: 	13/04/2000
+
+For each software package - Erlang, Eddie, Openssl
+- there is a build script that does a start-to-finish 
+process of building the software and packaging it.
+
+There is also one for Apache but it only does the minimum
+required task list.
+
+See  ~jon/BACKUPS/build-scripts/
+
+
+
+Reference sites:
+
+Erlang
+http://www.erlang.org
+
+Erlang Patches
+http://www.eddieware.org
+
+Sun Packaging How-To
+http://docs.sun.com/ab2/coll.45.13/PACKINSTALL/
+
+Open SSL
+http://www.openssl.org
+
+GNU
+http://www.gnu.org
+
+Solaris packages (including GNU ones)
+http://metalab.unc.edu/pub/packages/solaris/sparc/
+http://us-mirror.www.ainet.net/pub/direct/solaris/sparc/
+
+
+
+To operate one of these scripts, open it in an editor and consult
+the top section of the script file, which contains the variables
+that can be changed to control the behaviour of the script.
+
+Only run one of these script files at a time.
+
+Some of these script files require other software to be installed
+before they can do their job - generally the script will abort with
+a message if it has a problem.
+
+The script files all use BASH.
+
+The script files must be run as root.
+
+The script files all expect GNU make, gcc, and GNU patch to be
+installed - there are solaris packages of all these programs, see: 
+
+	http://metalab.unc.edu/pub/packages/solaris/sparc/
+	http://us-mirror.www.ainet.net/pub/direct/solaris/sparc/
+
+
+The script files are:
+
+	apache-build-and-pkg.sh
+
+	openssl-build-and-pkg.sh
+
+	erlang47-build-and-pkg.sh (obsolete)
+	erlang49-build-and-pkg.sh               
+
+	eddie-build-and-pkg.sh              
+
+
+Their support files that must be present are respectively:
+
+	apache-pkginfo
+
+	openssl-pkginfo
+	openssl-request
+
+	erlang-pkginfo	(for both erlang47 and 49)
+	erlang-request	(for both erlang47 and 49)
+
+	eddie-pkginfo
+	eddie-request
+	eddie-postinstall
+
+
+More notes on running the scripts are given after the example below.
+
+
+Dependencies
+------------
+
+Erlang 4.9.1 needs Perl 5.x and Open SSL 0.9.3 installed in order to compile.
+
+Eddie needs Erlang 4.9.1 and Open SSL 0.9.3 installed in order to compile.
+
+
+Variables you have to change
+----------------------------
+
+The following extracts from the start of erlang49-build-and-pkg.sh,
+which is the most complex of the build scripts, illustrate the variables
+that you must change to set up the script to work.
+
+Believe me this is much easier than remembering all the steps manually!
+
+Note: erlang49-build-and-pkg.sh takes command line options, but most
+of these scripts do not.
+
+This text has been cut down from the actual script, to make it clearer
+to you which variables you have to edit.
+
+
+#!/usr/local/bin/bash
+
+# this script builds and packages erlang 49 (OTP)
+# under solaris 2.7
+
+# (for the exact Erlang version, search this file
+#    for the variable ERLANG_BASE_TARGZ)
+
+# this script must be run from the directory it exists in
+
+# this script must be run as root
+
+# command line options:
+# (nothing) or 'help'   help
+# go                    whole thing
+# nomake                just package (assume make was already done)
+#                         still does a make install
+# nopack                just make (no packaging)
+
+# the files described by the following variables have to exist
+#   in the same directory as this script is run from
+#
+#     ERLANG_REQUEST
+#     ERLANG_PKGINFO
+
+# the files described by the following variables must exist 
+#   in the directory described by ERLANG_SOURCE_DIR :
+#
+#     ERLANG_BASE_TARGZ 
+#
+#     ERLANG_MNESIA_LIB_TARGZ
+#
+#     ERLANG_PATCH_1
+#     ERLANG_PATCH_2
+#     ERLANG_PATCH_3
+#     ERLANG_PATCH_4
+#     ERLANG_PATCH_5
+#     ERLANG_PATCH_6
+#     ERLANG_PATCH_7
+#     ERLANG_PATCH_8
+#     ERLANG_PATCH_9
+#     ERLANG_PATCH_10
+#     ERLANG_PATCH_11
+#     ERLANG_PATCH_12
+#     ERLANG_PATCH_13
+#     ERLANG_PATCH_14
+#     ERLANG_PATCH_15
+#     ERLANG_PATCH_16
+#
+
+
+# all variables should go here :
+
+
+# what the sun package symbolic name ends up being - this
+#   gets an abbreviated version number appended to it by
+#   this script
+
+BASE_ERLANG_PACKAGE_NAME=erlang
+
+
+# this becomes the actual package symbolic name.
+# for safety set it to the base name for now.
+
+ERLANG_PACKAGE_NAME=$BASE_ERLANG_PACKAGE_NAME
+
+
+# the name of the openssl package we need to build erlang
+# if you have installed a different open ssl package you may
+#   need to change this line.
+
+OPENSSL_PACKAGE_NAME=opnssl093
+
+
+# patch'u'like
+
+PATCH_PACKAGE_NAME=GNUpatch
+PATCH=/usr/local/bin/patch
+
+
+# source directory - where to go to find the tar.gz file and patches
+#
+# YOU HAVE TO CHANGE THIS !!
+#
+
+ERLANG_SOURCE_DIR=/usr/jon/erlang49
+
+
+# directory below source directory where building actually takes place.
+# you only need to change this if the contents of the base tar.gz file
+#  for erlang creates a differently named directory to this.
+
+ERLANG_BUILD_DIR=$ERLANG_SOURCE_DIR/otp_src_R6B-0
+
+
+# root of destination tree - where the staging and packaging areas go
+#
+# YOU HAVE TO CHANGE THIS !!
+#
+
+ROOT=/usr/jon/test-pit
+
+
+# keep careful track of these - you generally should not have to change them.
+# note - relative
+# some trickiness has to be done here because the make install
+#   creates symbolic links to absolute paths which we need to
+#   make into parametric paths (right hand side of pkgmap file)
+#   in the final package
+
+REL_ERLANG_USR_ROOT=usr/local
+REL_ERLANG_VAR_ROOT=var
+
+
+
+# destination staging directory and packaging directory respectively.
+# you don't really need to change these unless you don't like the names.
+
+ERLANG_STAGE_DIR=$ROOT/erlang49.staging
+ERLANG_PKG_DIR=$ROOT/erlang49.package
+
+
+# tar gz - the file erlang is obtained from.
+# you _might_ have to change this.
+
+ERLANG_BASE_TARGZ=$ERLANG_SOURCE_DIR/otp_src_R6B-0.tar.gz
+
+
+# new mnesia library - this replaces the one in the above tar gz file
+
+ERLANG_MNESIA_LIB_TARGZ=$ERLANG_SOURCE_DIR/mnesia-3.8.5.tgz
+
+
+# patches - Erlang won't work without these
+
+ERLANG_PATCH_1=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.01.1.txt
+ERLANG_PATCH_2=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.02.txt
+ERLANG_PATCH_3=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.03.txt
+ERLANG_PATCH_4=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.04.txt
+ERLANG_PATCH_5=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.05.txt
+ERLANG_PATCH_6=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.06.txt
+ERLANG_PATCH_7=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.07.txt
+ERLANG_PATCH_8=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.08.txt
+ERLANG_PATCH_9=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.09.txt
+ERLANG_PATCH_10=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.10.txt
+ERLANG_PATCH_11=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.11.txt
+ERLANG_PATCH_12=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.12.txt
+ERLANG_PATCH_13=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.13.txt
+ERLANG_PATCH_14=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.14.txt
+ERLANG_PATCH_15=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.15.txt
+ERLANG_PATCH_16=$ERLANG_SOURCE_DIR/tmp_patch_R6B0.16.txt
+
+
+# system files for the sun package - you should not have to change these.
+# if you lose these files consult the 'build.and.package.erlang49.on.solaris.txt'
+#  document for their contents.
+# you may also wish to browse
+#
+#  http://docs.sun.com/ab2/coll.45.13/PACKINSTALL/
+#
+# to get an idea what is going on.
+
+
+ERLANG_PKGINFO=$STARTING_DIR/erlang-pkginfo
+ERLANG_REQUEST=$STARTING_DIR/erlang-request
+
+# end of variables
+
+
+
+
+General usage of these scripts
+------------------------------
+
+For the given script you want to run, make sure its support files
+are present in the same directory as the script.
+
+Eg. say you have a directory containing the build scripts, called:
+
+  /home/solaris/build-scripts/
+
+then for the erlang49-build-and-package.sh script, copy the files
+
+  erlang-pkginfo
+  erlang-request
+
+into /home/solaris/build-scripts/
+
+Now make an ERLANG_SOURCE_DIR directory somewhere, and copy all the files and directories
+mentioned by the variables at the start of the script into that
+directory.
+
+Eg. for the erlang49-build-and-package.sh script, make a directory
+called, say:
+
+  /home/erlang49/
+
+and copy the files:
+
+  otp_src_R6B-0.tar.gz
+  
+  mnesia-3.8.5.tgz
+
+  tmp_patch_R6B0.01.1.txt
+  tmp_patch_R6B0.02.txt
+  tmp_patch_R6B0.03.txt
+  tmp_patch_R6B0.04.txt
+  tmp_patch_R6B0.05.txt
+  tmp_patch_R6B0.06.txt
+  tmp_patch_R6B0.07.txt
+  tmp_patch_R6B0.08.txt
+  tmp_patch_R6B0.09.txt
+  tmp_patch_R6B0.10.txt
+  tmp_patch_R6B0.11.txt
+  tmp_patch_R6B0.12.txt
+  tmp_patch_R6B0.13.txt
+  tmp_patch_R6B0.14.txt
+  tmp_patch_R6B0.15.txt
+  tmp_patch_R6B0.16.txt
+
+
+into /home/erlang49/.
+
+
+Now make a ROOT directory somewhere - this is the directory underneath
+which the staging and package directories will be created.
+
+eg. /home/test-pit/
+
+
+Now edit erlang49-build-and-package.sh, and make the following alterations:
+
+  ERLANG_SOURCE_DIR=/home/erlang49
+  ROOT=/home/test-pit
+
+That's it!
+
+Then run the script (you need to be root!) by changing to the directory
+where the build script lives (/home/solaris/build-scripts/ in our example),
+and then do:
+
+  ./erlang49-build-and-package.sh  go
+
+[Note: this script takes various command line options, but most of the scripts 
+ don't take any command line options.  'go' tells it to do everything and leave 
+ no steps out.  Consult the top of the script file for the available
+ options, or do:  ./erlang49-build-and-package.sh  help                       ]
+
+It is a VERY good idea to log the output of the script, a suggested way is-
+
+In one terminal do (this is a BASH command line):
+
+  ./erlang49-build-and-package.sh  go  >  erlang49.log  2>&1
+
+And in another terminal on the same machine, go to the script directory and do:
+
+  tail -f erlang49.log
+
+to see what is going on as it is being logged.
+
+
+
+[end of document]

@@ -1,0 +1,8 @@
+[{release,"dns",
+          "P1A",
+          "4.6.4",
+          [{kernel,"2.0.5","/home/share/magnus/otp_r3b02/lib/kernel-2.0.5"},
+           {stdlib,"1.4.2","/home/share/magnus/otp_r3b02/lib/stdlib-1.4.2"},
+           {sasl,"1.5","/home/share/magnus/otp_r3b02/lib/sasl-1.5"},
+           {dns_server,"0.5","/home/share/magnus/dns_server-0.5"}],
+          permanent}].

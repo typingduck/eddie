@@ -1,0 +1,149 @@
+#---------------------------------------------------------------
+# File    :	basic_migration.mig
+# Purpose :	A configuration file for the IP address migration and 
+#	load balancing applications.
+#
+# Syntax  : Most configuration directives are on the form Key 
+# 	Value(s).
+#	Some directives are context based though. That is, their 
+#	respective contexts start with 
+#	<Server ...> or <Cluster ...>
+#	and end with </Server> or </Cluster>, 
+#	and the configuration done inside of the
+#	context defines that Server or Cluster.
+#----------------------------------------------------------
+
+# Declare the available DNS Servers and the port they are using.
+# The Front Ends must be configured with the address of the Eddie DNS
+# if DNS Load Balancing is to be used, as the gateways provide load info.
+# to the DNS. 
+DNSServer eddieware.org 4567
+
+# Define each erlang node on each computer. 
+# Each node on a computer must have a unique name.
+# <Node nodename@computer>
+
+# Define the interface used by the node
+# Interfaces eth0
+
+# Define the load threshold used in the admission control and
+# load balancing algorithms
+# LoadThreshold X Y			
+# Note that X is no longer used. Y defines the loading returned
+# by uptime at which load balancing and control begins to take
+# place.
+# We recommend Y values in the range 2 to 4.
+<Node eddie01@evita>
+  Interfaces eth0
+  LoadThreshold 0.8 3.0
+</Node>
+
+<Node eddie01@erika>
+  Interfaces eth0
+  LoadThreshold 0.8 3.0
+</Node>
+
+<Node eddie01@europa>
+  Interfaces eth0
+  LoadThreshold 0.8 3.0
+</Node>
+
+<Node eddie01@eva>
+  Interfaces eth0
+  LoadThreshold 0.8 3.0
+</Node>
+
+# The netmask defines which machines are allowed to communicate 
+# with each other inside the LAN.
+Netmask 255.255.255.0
+
+# Now define the clusters within the distributed web server
+# Clusters consist of nodes that can cover for each other in the
+# event of failure.
+# There are two types of cluster: Frontend | Backend
+# A Frontend cluster directs / controls traffic to one or more
+# Backend clusters. The cluster names need to be unique, but do not
+# need to be in the DNS Server. They are used for matching purposes 
+# in various places.
+
+# Front ends in a Frontend Cluster run the actual Intelligent HTTP
+# Gateway application. They also perform IP address migration in
+# the event of failure of another member of the Cluster. The nodes
+# that can take over from each other is defined by the FailoverNodes
+# key.
+
+# To do IP address migration, a pool of alias IP addreses is
+# required. One alias IP address is given to each Front End. 
+# It is MANDATORY to use aliases for Front Ends. The AutonConfig On
+# Key insures that the aliasing is automatically taken care of. 
+
+# The Interface and the Port for each node are also defined here.
+# The Port is that used by HTTP request from the outside world.
+
+<Cluster www0101.eddieware.org>
+  ClusterType Frontend
+
+  FailoverNodes eddie01@erika eddie01@evita
+  BackendClusters backend0101.eddieware.org
+
+  <Server eddie01@erika>
+    AutoConfig On
+    Interface eth0
+    IPAddress 10.0.0.181
+    Port 80
+    Start generic module eddie start @IPAddress @Port http
+    Stop generic module eddie stop @IPAddress @Port http
+  </Server>
+
+<Server eddie01@evita>
+    AutoConfig On
+    Interface eth0
+    IPAddress 10.0.0.182
+    Port 80
+    Start generic module eddie start @IPAddress @Port http
+    Stop generic module eddie stop @IPAddress @Port http
+  </Server>
+</Cluster>
+
+# We now define the backend clusters. The real IP addresses are used
+# for backends because address migration is not employed. In the
+# event of failures, traffic is routed away from the failed node.
+# Hence AutoConfig is off. 
+# We define the Port that will be used on the backend to access
+# httpd. 
+# If Eddie is supposed to start and stop the HTTP daemons, we also
+# provide information on where to find the start and stop shell
+# scripts. We also define the location of httpd and the directory 
+# containing the HTTP configuration files appropriate to our 
+# system.
+# If the httpd does not have to be started and stopped by Eddie, 
+# then the Start and Stop lines may be left out.
+
+<Cluster backend0101.eddieware.org>
+  ClusterType Backend
+
+<Server eddie01@eva>
+	AutoConfig Off
+	IPAddress 10.0.0.163
+	Port 8001	
+# Following two lines should be on one line
+	Start generic exec /usr/local/lib/eddie/bin/start_httpd 
+	@IPAddress @Port /usr/sbin/httpd /usr/local/lib/eddie/conf/conf
+
+# Following two lines should be on one line
+	Stop generic exec /usr/local/lib/eddie/bin/stop_httpd 
+	@IPAddress @Port
+
+<Server eddie01@europa>
+	AutoConfig Off
+	IPAddress 10.0.0.162
+	Port 8001
+# Following two lines should be on one line
+Start generic exec /usr/local/lib/eddie/bin/start_httpd @IPAddress 
+@Port /usr/sbin/httpd /usr/local/lib/eddie/conf/conf
+
+Stop generic exec /usr/local/lib/eddie/bin/stop_httpd @IPAddress @Port
+
+  </Server>
+
+</Cluster>

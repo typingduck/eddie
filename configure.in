@@ -1,0 +1,408 @@
+dnl $id $
+dnl Apr 99 - geoff@eddieware.org - some additions for oam stuff
+
+dnl Process this file with autoconf to produce a configure script.
+AC_REVISION($Revision: 1.1 $)dnl
+AC_INIT(eddie_rootdir.erl)
+AC_CONFIG_HEADER(config.h)
+AC_CANONICAL_SYSTEM
+
+dnl first of all; check for gmake
+AC_PATH_PROG(ac_cv_gmake, gmake, no, $PATH:/bin:/usr/bin:/usr/local/bin)
+if test $ac_cv_gmake = no ; then
+	MAKE=make
+	AC_SUBST(MAKE)
+	AC_MSG_WARN([gmake not found, will try to use: make])
+else
+	MAKE=gmake
+	AC_SUBST(MAKE)
+fi
+
+dnl Check for ssh - since we try to be secure!
+AC_PATH_PROG(ac_cv_rsh, ssh, no, $PATH:/bin:/usr/bin:/usr/local/bin)
+if test $ac_cv_rsh = no ; then
+	EDDIE_RSH=rsh
+	AC_SUBST(EDDIE_RSH)
+	ERL_CALL=ecmd
+	AC_SUBST(ERL_CALL)
+else
+	EDDIE_RSH="ssh -f"
+	AC_SUBST(EDDIE_RSH)
+	ERL_CALL="ecmd -ssh"
+	AC_SUBST(ERL_CALL)
+fi
+
+dnl A crucial Erlang program (prefix)
+EDDIE_ROOTDIR=eddie_rootdir
+
+dnl Where is the eddie root directory
+AC_PATH_PROG(ac_cv_eddie_root, $EDDIE_ROOTDIR.erl, no, `pwd`)
+if test $ac_cv_eddie_root = no ; then
+	AC_MSG_ERROR("$EDDIE_ROOTDIR.erl not found")
+else
+	AC_MSG_CHECKING([for eddie root directory])
+	EDDIE_ROOT=`dirname "$ac_cv_eddie_root"`
+	AC_SUBST(EDDIE_ROOT)
+	AC_MSG_RESULT([$EDDIE_ROOT])
+fi
+
+dnl check that we can find the Erlang 'erl' start 
+AC_PATH_PROG(ac_cv_erl, erl, no, $PATH:/bin:/usr/bin:/usr/local/bin)
+if test $ac_cv_erl = no ; then
+	AC_MSG_ERROR("erl not found")
+else
+	ERL="$ac_cv_erl"
+	AC_SUBST(ERL)
+fi
+
+dnl check that we can find the 'erlc' Erlang compiler
+AC_PATH_PROG(ac_cv_erlc, erlc, no, $PATH:/bin:/usr/bin:/usr/local/bin)
+if test $ac_cv_erlc = no ; then
+	AC_MSG_ERROR("erlc not found")
+else
+	ERLC="$ac_cv_erlc"
+	AC_SUBST(ERLC)
+fi
+
+dnl check that we can find the 'whoami' program
+AC_PATH_PROG(ac_cv_whoami, whoami, no, $PATH:/bin:/usr/bin:/usr/local/bin:/usr/ucb)
+if test $ac_cv_erlc = no ; then
+	AC_MSG_ERROR("whoami not found")
+else
+	WHOAMI="$ac_cv_whoami"
+	AC_SUBST(WHOAMI)
+fi
+
+dnl check that we can find the 'adduser' or 'useradd' program
+dnl should add the group too
+AC_PATH_PROG(ac_cv_adduser, addgroup, no, $PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/ucb)
+AC_PATH_PROG(ac_cv_useradd, groupadd, no, $PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/ucb)
+if test $ac_cv_adduser = no ; then
+    if test $ac_cv_useradd = no ; then
+	    AC_MSG_WARN("adduser/useradd not found")
+    else
+        ADDUSER="$ac_cv_useradd"
+    fi
+else
+    ADDUSER="$ac_cv_adduser"
+fi
+
+
+dnl find out the username of the user we want to add
+AC_ARG_WITH(user,  --with-user               select the runtime user - default: daemon, ac_cv_user=${withval}, ac_cv_user=daemon)
+
+
+dnl allow different database/log directories to be specified
+AC_ARG_WITH(logdir,  --with-logdir             select the runtime logging directory - default: /var/eddie, ac_cv_logdir=${withval}, ac_cv_logdir=/var/eddie)
+LOGDIR="$ac_cv_logdir"
+AC_SUBST(LOGDIR)
+
+dnl where to put the documentation/examples
+AC_ARG_WITH(docdir,  --with-docdir             select the documentation directory - default: $libdir/eddie/doc, ac_cv_docdir=${withval}, ac_cv_docdir=doc)
+INSTALL_DOC="$ac_cv_docdir"
+AC_SUBST(INSTALL_DOC)
+
+
+dnl find out the type of Erlang machine which is used
+AC_MSG_CHECKING([checking for Erlang machine type])
+rm -f $EDDIE_ROOTDIR.{jam,beam}
+$ac_cv_erl -compile $EDDIE_ROOTDIR
+EDDIE_ROOTDIR_FILES=`echo $EDDIE_ROOTDIR.*`
+case "$EDDIE_ROOTDIR_FILES" in
+*jam*)
+	EMULATOR=jam
+	AC_SUBST(EMULATOR)
+	AC_MSG_RESULT([jam])
+	;;
+*beam*) 
+	EMULATOR=beam
+	AC_SUBST(EMULATOR)
+	AC_MSG_RESULT([beam])
+	;;
+*)
+	AC_MSG_RESULT([no])
+	AC_MSG_ERROR("Unable to determine Erlang machine type: jam/beam")
+	;;
+esac
+
+dnl find out where the Erlang root dir is located
+AC_MSG_CHECKING([checking for the Erlang root dir])
+EDDIE_ROOTDIR_RESULT=$EDDIE_ROOTDIR.result
+rm -f $EDDIE_ROOTDIR_RESULT
+$ac_cv_erl +B -noshell -s $EDDIE_ROOTDIR start $EDDIE_ROOTDIR_RESULT
+ERLDIR=`cat $EDDIE_ROOTDIR_RESULT`
+AC_SUBST(ERLDIR)
+AC_MSG_RESULT([$ERLDIR])
+
+dnl work out who the cpu, vendor and OS are
+AC_DEFINE_UNQUOTED(TARGET_CPU, "$target_cpu")
+AC_DEFINE_UNQUOTED(TARGET_VENDOR, "$target_vendor")
+AC_DEFINE_UNQUOTED(TARGET_OS, "$target_os")
+AC_DEFINE_UNQUOTED(CPU_VENDOR_OS, "$target")
+
+dnl System properties
+case "$target_os" in
+*bsd*)
+	AC_DEFINE(BSD)
+	AC_DEFINE(USE_BPF)
+	TARGET_OS=bsd
+	AC_SUBST(TARGET_OS)
+	EXE=
+	AC_SUBST(EXE)
+	dnl	ADDUSER="$ADDUSER -silent"
+	ADDUSER=true
+	AC_SUBST(ADDUSER)
+	;;
+*linux*) 
+	AC_DEFINE(LINUX)
+	AC_DEFINE(USE_IFALIAS)
+	AC_DEFINE(USE_SOCKET)
+	dnl SHOULD DO A BETTER TEST FOR THIS !!
+	AC_DEFINE(BROKEN_CMSG_FIELDS) 
+	TARGET_OS=linux
+	AC_SUBST(TARGET_OS)
+	EXE=
+	AC_SUBST(EXE)
+	AC_SUBST(ADDUSER)
+	;;
+*solaris*)
+	AC_DEFINE(SOLARIS)
+	AC_DEFINE(USE_IFALIAS)
+	AC_DEFINE(USE_DLPI)
+	TARGET_OS=solaris
+	AC_SUBST(TARGET_OS)
+	EXE=
+	AC_SUBST(EXE)
+	ADDUSER=true
+	AC_SUBST(ADDUSER)
+	;;
+*cygwin*)
+	TARGET_OS=cygwin
+	AC_SUBST(TARGET_OS)
+        EXE=.exe
+	AC_SUBST(EXE)
+    ADDUSER=true
+	AC_SUBST(ADDUSER)
+	;;
+*)
+	AC_MSG_ERROR("Unable to determine if separate interfaces required for alias")
+	;;
+esac
+
+dnl Ugly quoting stuff
+dnl On cygwin, we need extra quotations because of the way
+dnl Visual C++ runtime parses the parameters. Also there is
+dnl not root user in cygwin. There is also a bug in cygwin
+dnl where it cannot correctly verify the write status of a
+dnl directory.
+
+case "$target_os" in
+*cygwin*)
+    QUOTE='\\\\\\"\\\\\\"'
+    DB_QUOTE='\\"\\"'
+    HEART_OPEN_QUOTE='\\"\\\\\\"\\\\\\"'
+    HEART_CLOSE_QUOTE='\\\\\\"\\\\\\"\\"'
+    EDDIE_USER=
+    ;;
+*)
+    QUOTE='\\"'
+    DB_QUOTE='\\"'
+    HEART_OPEN_QUOTE='"\\"'
+    HEART_CLOSE_QUOTE='\\""'
+    EDDIE_USER=$ac_cv_user
+    ;;
+esac
+AC_SUBST(QUOTE)
+AC_SUBST(DB_QUOTE)
+AC_SUBST(HEART_OPEN_QUOTE)
+AC_SUBST(HEART_CLOSE_QUOTE)
+AC_SUBST(EDDIE_USER)
+
+dnl Checks for programs.
+AC_PROG_CC
+
+case "$target_os" in
+*cygwin*)
+	;;
+*)
+	AC_PATH_PROG(ac_cv_ifconfig, ifconfig, no, $PATH:/sbin:/usr/sbin:/usr/local/sbin)
+	if test $ac_cv_ifconfig = no ; then
+		AC_MSG_ERROR("ifconfig not found")
+	else
+		AC_DEFINE_UNQUOTED(IFCONFIG, "$ac_cv_ifconfig")
+	fi
+	;;
+esac
+
+AC_PATH_PROG(ac_cv_route, route, no, $PATH:/sbin:/usr/sbin:/usr/local/sbin)
+if test $ac_cv_route = no ; then
+	AC_MSG_ERROR("route not found")
+else
+	AC_DEFINE_UNQUOTED(ROUTE, "$ac_cv_route")
+fi
+
+dnl Checks for libraries.
+
+AC_CHECK_LIB(nsl, t_open)
+AC_CHECK_LIB(socket, socket)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(malloc.h sys/ioctl.h unistd.h varargs.h strings.h fcntl.h)
+AC_CHECK_HEADERS(sys/fcntl.h net/if_packet.h net/if_arp.h net/bpf.h)
+AC_CHECK_HEADERS(netinet/if_ether.h sys/dlpi.h)
+
+dnl OpenSSL stuff
+for dir in /usr /usr/pkg /usr/local /usr/local/ssl /usr/lib/ssl /usr/ssl; do
+    ssldir="$dir"
+	AC_CHECK_HEADER($dir/include/openssl/opensslv.h, ac_cv_openssl=yes, ac_cv_openssl=no)
+    if test $ac_cv_openssl = yes ; then
+	   break
+    fi
+done
+
+if test $ac_cv_openssl = yes ; then
+    AC_DEFINE(HAVE_OPENSSL_H)
+	SSL_RELAY=ssl_relay
+	AC_SUBST(SSL_RELAY)
+	SSL_INCLUDE=-I$ssldir/include
+	AC_SUBST(SSL_INCLUDE)
+	SSL_LIB_PATH=-L$ssldir/lib
+	AC_SUBST(SSL_LIB_PATH)
+	SSL_LIB_DIR=$ssldir/lib
+	AC_SUBST(SSL_LIB_DIR)
+else
+	AC_MSG_WARN([OpenSSL not found, will build without SSL support])
+fi
+
+dnl Check for functions in header files
+AC_CACHE_CHECK(for stdlib_malloc{}, ac_cv_have_stdlib_malloc,
+AC_EGREP_HEADER(malloc, stdlib.h, ac_cv_have_stdlib_malloc=yes, ac_cv_have_stdlib_malloc=no))
+if test $ac_cv_have_stdlib_malloc = yes ; then
+	AC_DEFINE(STDLIB_MALLOC)
+fi
+
+dnl Check if we have sys_errlist declared
+AC_CACHE_CHECK(for sys_errlist{}, ac_cv_have_sys_errlist,
+AC_EGREP_HEADER(sys_errlist, stdio.h, ac_cv_have_sys_errlist=yes, ac_cv_have_sys_errlist=no))
+if test $ac_cv_have_sys_errlist = yes ; then
+	AC_DEFINE(HAVE_SYS_ERRLIST)
+fi
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+
+AC_TYPE_T_CHECK(int8_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(u_int8_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(int16_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(u_int16_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(int32_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(u_int32_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(int64_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(u_int64_t, sys/types.h, SYS_TYPES_H) dnl
+AC_TYPE_T_CHECK(caddr_t, sys/types.h, SYS_TYPES_H) dnl
+
+dnl Steven's suggests you check here on SunOS 4.1.x
+AC_TYPE_T_CHECK(int8_t, sys/bitypes.h, SYS_BITYPES_H) dnl
+
+AC_TYPE_BASE(BIT8, '1') dnl
+AC_TYPE_BASE(BIT16, '2') dnl
+AC_TYPE_BASE(BIT32, '4') dnl
+AC_TYPE_BASE(BIT64, '8') dnl
+
+dnl structures
+AC_STRUCT_CHECK(sockaddr, sys/socket.h, SYS_SOCKET_H)
+AC_STRUCT_CHECK(in_addr, netinet/in.h, NETINET_IN_H)
+AC_STRUCT_CHECK(sockaddr_in, netinet/in.h, NETINET_IN_H)
+AC_STRUCT_CHECK(arpreq, net/if_arp.h, NET_IF_ARP_H)
+AC_STRUCT_CHECK(ether_header, net/ethernet.h, NET_ETHERNET_H)
+AC_STRUCT_CHECK(ether_header, sys/ethernet.h, SYS_ETHERNET_H)
+AC_STRUCT_CHECK(ethhdr, net/ethernet.h, NET_ETHERNET_H)
+
+dnl Solaris 2.6 lies ... it doesn't really support sockaddr_dl and if_ether is
+dnl broken
+case "$target_os" in
+*solaris*)
+	;;
+*)
+	AC_STRUCT_CHECK(sockaddr_dl, net/if_dl.h, NET_IF_DL_H)
+	AC_STRUCT_CHECK(sockaddr_dl, net/if_dl.h, HAVE_sockaddr_dl)
+	AC_STRUCT_CHECK(ether_header, netinet/if_ether.h, NETINET_IF_ETHER_H)
+	;;
+esac
+
+dnl defines
+AC_DEFINE_CHECK(ETHER_ADDR_LEN, net/ethernet.h, NET_ETHERNET_H)
+AC_DEFINE_CHECK(ETHERADDRL, sys/ethernet.h, SYS_ETHERNET_H)
+AC_DEFINE_CHECK(SIOCGIFCONF, sys/sockio.h, SYS_SOCKIO_H)
+AC_DEFINE_CHECK(SIOCGIFHWADDR, sys/sockio.h, SYS_SOCKIO_H)
+AC_DEFINE_CHECK(SIOCGIFHWADDR, sys/socketio.h, SYS_SOCKETIO_H)
+AC_DEFINE_CHECK(SIOCGIFHWADDR, linux/sockios.h, LINUX_SOCKIOS_H)
+AC_DEFINE_CHECK(SIOCGARP, sys/sockio.h, SYS_SOCKIO_H)
+AC_DEFINE_CHECK(DLIOCRAW, sys/dlpi.h, SYS_DLPI_H)
+
+dnl fields in structures
+dnl Check if sockaddr{} has sa_len member.
+dnl
+AC_CACHE_CHECK(if sa_len_in_sockaddr{}, ac_cv_sockaddr_has_sa_len,
+	AC_TRY_COMPILE([
+#		include <sys/types.h>
+#		include <sys/socket.h>],
+		[unsigned int i = sizeof(((struct sockaddr *)0)->sa_len)],
+	ac_cv_sockaddr_has_sa_len=yes,
+	ac_cv_sockaddr_has_sa_len=no))
+if test $ac_cv_sockaddr_has_sa_len = yes ; then
+	AC_DEFINE(SA_LEN_IN_SOCKADDR)
+	AC_DEFINE(NEED_SYS_TYPES_H)
+	AC_DEFINE(NEED_SYS_SOCKET_H)
+fi
+
+dnl Check if ether_header{} uses ether_addr{}.
+dnl
+AC_CACHE_CHECK(if ether_header_uses_ether_addr{}, ac_cv_ether_header_uses_ether_addr,
+	AC_TRY_COMPILE([
+#		include <sys/types.h>
+#		include <sys/ethernet.h>],
+		[struct  ether_addr a; struct  ether_header b; a = b.ether_dhost;],
+	ac_cv_ether_header_uses_ether_addr=yes,
+	ac_cv_ether_header_uses_ether_addr=no))
+if test $ac_cv_ether_header_uses_ether_addr = yes ; then
+	AC_DEFINE(ETHER_HEADER_USES_ETHER_ADDR)
+fi
+
+dnl Check for limit stuff
+AC_PATH_PROG(ac_cv_limit, ulimit, no, $PATH)
+AC_MSG_CHECKING([checking for limit on cartman's language])
+if test $ac_cv_limit = no ; then
+	LIMIT=
+	AC_SUBST(LIMIT)
+    AC_MSG_RESULT([no])
+else
+	LIMIT="ulimit -n 1024"
+	AC_SUBST(LIMIT)
+    AC_MSG_RESULT([yes])
+fi
+
+dnl CPU_SUP (kernel statistics support) stuff
+AC_CHECK_HEADER(kstat.h, ac_cv_kstat=yes, ac_cv_kstat=no)
+if test $ac_cv_kstat = yes ; then
+	CPU_SUP=true
+ 	AC_SUBST(CPU_SUP)
+else
+ 	CPU_SUP=false
+ 	AC_SUBST(CPU_SUP)
+fi
+
+dnl Checks for library functions.
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(socket)
+AC_OUTPUT(Makefile eddie.mk configure.erl)
+
+case $target_os in
+*cygwin*)
+	sed -e 's/\/\/\([[a-zA-Z]]\)/\1:/' < eddie.mk > eddie.mk.tmp
+	mv eddie.mk.tmp eddie.mk
+	sed -e 's/\/\/\([[a-zA-Z]]\)/\1:/' < makefile > makefile.tmp
+	mv makefile.tmp makefile
+	;;
+esac

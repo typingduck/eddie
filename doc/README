@@ -1,0 +1,38 @@
+What is this?
+-------------
+Eddie is set of cluster applications to be used when building highly
+robust and scalable server farms. Eddie is an Open Source initiative
+initiated by Ericsson Telecom AB and consists of two components, i.e.
+
+- A Load-balancing DNS Server
+- An Intelligent HTTP Gateway
+
+Take the opportunity to read the White Paper, tutorials and
+installation instructions available at www.eddieware.org.
+
+The load-balancing DNS server is plug-in compatible with named-4.x.y
+(BIND) and uses the same configuration files. The DNS server uses
+additional load information to direct clients to servers most suitable
+(low load and alive). 
+
+The Intelligent HTTP Gateway is a peer which sits on top of back-end
+HTTP servers such as the Apache Web server. The gateway schedules
+requests to the least loaded back-ends on the LAN using adaptable
+load-balancing algorithms. It also analyzes incoming requests
+directing certain types of traffic to certain types of hosts using
+configurable scheduling patterns, e.g. CGI-script requests can be
+directed to host A and requests for static HTML pages to host B. The
+gateway also features advanced admission control mechanisms.
+
+The Gateway applications also provides IP Address Migration features. 
+IP Address Migration makes it possible to
+set up overlapping take-over and fail-over sets using
+any type of servers. The goal is to be in service as long as at least
+one host is running. All aspects of the clustering are configurable
+and call-back scripts can be written to customize start, stop,
+monitoring and alarm handling. 
+
+Helping out?
+------------
+Do you want to join the Eddie development team? Do not hesitate to
+contact us at core@eddieware.org.

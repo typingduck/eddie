@@ -1,0 +1,94 @@
+#!/bin/sh
+
+#
+# This is a weird script...
+# It should all be done by the Makefile..
+#
+# Apr 99 - geoff@eddieware.org - OBSOLETE FILE (kept as "memory" for now)
+#
+
+INSTALL_ROOT=`pwd`
+
+if [ ! -d bin ]
+then
+        mkdir bin
+fi
+
+#sed -e "s;%EMU%;%EMULATOR%%EMULATOR_NUMBER%;" system/start_erl > bin/start_erl
+#chmod 755 bin/start_erl
+
+sed -e "s;%ERTS_VSN%;%I_VSN%;" \
+    -e "s;%SYS_VSN%;%I_SYSTEM_VSN%;" system/start_erl.data.src > releases/start_erl.data
+
+##
+## Temporary ugly stuff !!
+##
+#if [ "%TARGET%" = "linux" ] 
+#then
+#    cp $INSTALL_ROOT/erts-%I_VSN%/bin/erl_call.linux bin/erl_call
+#else
+#    cp $INSTALL_ROOT/erts-%I_VSN%/bin/erl_call bin/erl_call
+#fi
+#chmod 755 bin/erl_call
+
+cp system/sys.config.src releases/sys.config
+
+##
+## This is for the OAM functions.
+## 
+cp oam/priv/start bin/estart
+chmod 755 bin/estart 
+
+cp oam/priv/add bin/eadd
+chmod 755 bin/eadd 
+
+cp oam/priv/delete bin/edelete
+chmod 755 bin/edelete
+
+cp oam/priv/init bin/einit
+chmod 755 bin/einit
+
+cp oam/priv/status bin/estatus
+chmod 755 bin/estatus
+
+cp oam/priv/stop bin/estop
+chmod 755 bin/estop
+
+cp oam/priv/config bin/econfig
+chmod 755 bin/econfig
+
+if [ "`whoami`" = "root" ]
+then
+    chown root misc/priv/fdsrv
+    chown root servant/priv/{ifadd,ifdel,ifget,routeadd,garp}
+    chmod u+s misc/priv/fdsrv
+    chmod u+s servant/priv/ifadd
+    chmod u+s servant/priv/ifdel
+    chmod u+s servant/priv/ifget
+    chmod u+s servant/priv/routeadd
+    chmod u+s servant/priv/garp
+else
+    echo "You have to become root and perform the following commands:"
+    echo "  chown root misc/priv/fdsrv"
+    echo "  chown root servant/priv/{ifadd,ifdel,ifget,routeadd,garp}"
+    echo "  chmod u+s misc/priv/fdsrv"
+    echo "  chmod u+s servant/priv/{ifadd,ifdel,ifget,routeadd,garp}"
+fi
+
+##
+## Needed for the make files
+##
+ln -s misc lib/misc-%MISC_VSN% 
+ln -s sync_nodes lib/sync_nodes-%SYNC_NODES_VSN% 
+ln -s load_info lib/load_info-%LOAD_INFO_VSN% 
+ln -s servant lib/servant-%SERVANT_VSN% 
+ln -s master lib/master-%MASTER_VSN% 
+ln -s inet_server lib/inet_server-%INET_SERVER_VSN% 
+ln -s oam lib/oam-%OAM_VSN% 
+ln -s mnemosyne lib/mnemosyne-%MNEMOSYNE_VSN% 
+
+##
+## This is for the OAM functions
+## 
+cp -p system/eddie_clean.boot releases/eddie_clean.boot
+

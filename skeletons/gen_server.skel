@@ -1,0 +1,107 @@
+%%%----------------------------------------------------------------------
+%%% File    : SKEL-FILE
+%%% Author  : SKEL-AUTHOR-2
+%%% Created : SKEL-CREATED
+%%% Purpose : SKEL-PURPOSE
+%%%
+%%% The contents of this file are subject to the Erlang Public License
+%%% License, Version 1.0, (the "License"); you may not use this file
+%%% except in compliance with the License. You may obtain a copy of the
+%%% License at http://www.eddieware.org/EPL
+%%%
+%%% Software distributed under the License is distributed on an "AS IS"
+%%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+%%% the License for the specific language governing rights and limitations
+%%% under the License.
+%%%
+%%% The Original Code is Eddie-0.83b1.
+%%%
+%%% The Initial Developer of the Original Code is Ericsson Telecom
+%%% AB. Portions created by Ericsson are Copyright (C), 1998,1999 Ericsson
+%%% Telecom AB. All Rights Reserved.
+%%%
+%%% Author:
+%%% Contributor(s): ______________________________________.
+%%%----------------------------------------------------------------------
+
+-module(SKEL-MODULE).
+-author('SKEL-AUTHOR-1').
+-vc('$Id: gen_server.skel,v 1.1 2000/10/27 22:20:27 dredd Exp $ ').
+-id('$Id: gen_server.skel,v 1.1 2000/10/27 22:20:27 dredd Exp $ ').
+-source('$Source: /cvsroot/eddie/eddie/skeletons/gen_server.skel,v $ ').
+-revision('$Revision: 1.1 $ ').
+-date('$Date: 2000/10/27 22:20:27 $ ').
+-state('$State: Exp $ ').
+
+-behaviour(gen_server).
+
+%% External exports
+-export([start_link/0]).
+
+%% gen_server callbacks
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+
+-record(state, {}).
+
+%%%----------------------------------------------------------------------
+%%% API
+%%%----------------------------------------------------------------------
+start_link() ->
+    gen_server:start_link({local, }, , [], []).
+
+%%%----------------------------------------------------------------------
+%%% Callback functions from gen_server
+%%%----------------------------------------------------------------------
+
+%%----------------------------------------------------------------------
+%% Func: init/1
+%% Returns: {ok, State}          |
+%%          {ok, State, Timeout} |
+%%          ignore               |
+%%          {stop, Reason}
+%%----------------------------------------------------------------------
+init([]) ->
+    {ok, #state{}}.
+
+%%----------------------------------------------------------------------
+%% Func: handle_call/3
+%% Returns: {reply, Reply, State}          |
+%%          {reply, Reply, State, Timeout} |
+%%          {noreply, State}               |
+%%          {noreply, State, Timeout}      |
+%%          {stop, Reason, Reply, State}   | (terminate/2 is called)
+%%          {stop, Reason, State}            (terminate/2 is called)
+%%----------------------------------------------------------------------
+handle_call(Request, From, State) ->
+    Reply = ok,
+    {reply, Reply, State}.
+
+%%----------------------------------------------------------------------
+%% Func: handle_cast/2
+%% Returns: {noreply, State}          |
+%%          {noreply, State, Timeout} |
+%%          {stop, Reason, State}            (terminate/2 is called)
+%%----------------------------------------------------------------------
+handle_cast(Msg, State) ->
+    {noreply, State}.
+
+%%----------------------------------------------------------------------
+%% Func: handle_info/2
+%% Returns: {noreply, State}          |
+%%          {noreply, State, Timeout} |
+%%          {stop, Reason, State}            (terminate/2 is called)
+%%----------------------------------------------------------------------
+handle_info(Info, State) ->
+    {noreply, State}.
+
+%%----------------------------------------------------------------------
+%% Func: terminate/2
+%% Purpose: Shutdown the server
+%% Returns: any (ignored by gen_server)
+%%----------------------------------------------------------------------
+terminate(Reason, State) ->
+    ok.
+
+%%%----------------------------------------------------------------------
+%%% Internal functions
+%%%----------------------------------------------------------------------

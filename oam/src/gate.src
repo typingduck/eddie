@@ -1,0 +1,65 @@
+#----------------------------------------------------------------------
+# File    : ex1.gate
+# Contact : team@eddieware.org
+# Purpose : A single computer %PRODUCT_NAME% configuration.
+#           One front end and one back end on the computer europa  
+# Version : %EDDIE_VSN%
+#----------------------------------------------------------------------
+
+<Frontend http>
+
+  ProtocolModule http
+
+  <EndpointConfig http_tcp> 
+    Port 8080
+    ReadTimeout 480
+    KeepAliveTimeout 20 
+    ExternalProxy %INSTALL_PREFIX%/lib/%PRODUCT_NAME%/bin/relay @control_port @ip @port
+  </EndpointConfig>
+
+  AdmitControl true
+
+  AdmitTime 600
+
+  AdmitAlways 150.236.14.*
+
+  AdmitNever 150.236.20.*
+
+  AdmitQueuePlaces 1000
+
+  AdmitMaxSessions 100
+
+  AdmitBlockedPage /%PRODUCT_NAME%_admit_blocked
+
+  AdmitRejectPage /%PRODUCT_NAME%_admit_reject
+
+  AdmitQueuePage /%PRODUCT_NAME%_admit_queue
+
+  <Erlets admit_control>
+    <Erlet erlet_admit_ctrl>
+    </Erlet>
+  </Erlets>
+
+  <Erlets status>
+    <Erlet erlet_status>
+    </Erlet>
+  </Erlets>
+
+  <Backend http_tcp be@echo>
+    <Schedule>
+      Patterns uri / ^/%PRODUCT_NAME%
+      Proxy 10.1.0.3 80
+    </Schedule>
+
+    <Schedule>
+      Patterns uri /%PRODUCT_NAME%_status
+      Erlets status
+    </Schedule>
+
+    <Schedule>
+      Patterns uri /%PRODUCT_NAME%_admit
+      Erlets admit_control
+    </Schedule>
+  </Backend>
+
+</Frontend>

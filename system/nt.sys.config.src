@@ -1,0 +1,17 @@
+[{kernel, [{error_logger, false},
+           {start_ddll, true},
+           {start_disk_log, true},
+           {start_os, true},
+           {start_pg2, true},
+           {start_timer, true}]},
+ {sasl, [{sasl_error_logger, false},
+%	 {error_logger_mf_dir, Dir}, %% Configured in start script !!
+         {error_logger_mf_maxbytes, 512000},
+         {error_logger_mf_maxfiles, 5}]},
+ {os_mon, [{start_disksup, false},
+           {start_memsup, false},
+           {start_os_sup, false},
+           {start_cpu_sup, %CPU_SUP%}]}].
+
+
+

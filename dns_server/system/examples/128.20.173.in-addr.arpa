@@ -1,0 +1,11 @@
+@ IN SOA     coke.foobarcorp.com.au. dns.coke.foobarcorp.com.au. (
+     199903171 ; Serial
+     21600     ; Refresh (6 hours)
+     3600      ; Retry (1 hour)
+     2592000   ; Exprire (1 month)
+     86400 )   ; Minimum (1 day)
+  IN NS      mm.foobarcorp.com.au.
+
+1 IN PTR coke.bistromath.se.
+2 IN PTR pepsi.bistromath.se.
+3 IN PTR jolt.bistromath.se.

@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# named           This shell script takes care of starting and stopping
+#                 named (BIND DNS server).
+#
+#   NOTE: THIS SCRIPT STARTS THE ERLANG DNS VERSION !!!
+#
+# chkconfig: 345 55 10
+# description: named (BIND) is a Domain Name Server (DNS) \
+# that is used to resolve host names to IP addresses.
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+
+[ -f /usr/sbin/named ] || exit 0
+
+[ -f /etc/named.boot ] || exit 0
+
+# See how we were called.
+case "$1" in
+  start)
+        # Start daemons.
+        echo -n "Starting ERLANG named: "
+        daemon /home/share/magnus/dns_server/releases/erl_dns
+        echo
+        touch /var/lock/subsys/named
+        ;;
+  stop)
+        # Stop daemons.
+        echo -n "Shutting down ERLANG named: "
+        killproc erl_dns
+        echo "done"
+        rm -f /var/lock/subsys/named
+        ;;
+  status)
+	status named
+	exit $?
+	;;
+  restart)
+#	named.restart
+#	exit $?
+	;;
+  *)
+        echo "Usage: named {start|stop|status|restart}"
+        exit 1
+esac
+
+exit 0
+

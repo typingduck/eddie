@@ -1,0 +1,200 @@
+#---------------------------------------------------------------
+# File    :	basic_gateway.gate
+# Purpose :	A configuration file for the Intelligent HTTP Gateway
+# 	(inet server) application.
+#
+# Syntax  : 	Most configuration directives are on the form Key 
+# 	Value(s).
+#	Some directives are context based though. That is, their 
+#	respective contexts start with 
+#	<Frontend ...> or <Backend ...>
+#	and end with </Frontend> or </Backend>, 
+#	and the configuration done inside of the
+#	context defines that Frontend or Backend.
+#----------------------------------------------------------
+# 
+# 
+# This file will be read by each Frontend to find out which
+# URIs run on each Backend, whether or not admission control should 
+# be employed and what default admission control resources 
+# are available (e.g. number of sessions that can be queued during
+# overload).
+
+<Frontend http>
+
+# Protocol Module is the module that implements the protocol 
+# specific parts of the server, in this case, http.
+
+  ProtocolModule http
+
+# Port Options
+# EndpointConfig is used to configure sockets.
+# Mainly it is used to change which port the inet server uses, but
+# it is also possible to change socket options.
+# The syntax is 
+# EndpointConfig Endpointname UsePort | default *(Sock_opt 
+# Sock_value) 
+# For example, the endpointname for http is http_tcp
+# EndpointConfig http_tcp default 	 
+# EndpointConfig http_tcp 8888 nodelay false
+# EndpointConfig http_tcp 8000
+# ReadTimeout and KeepAliveTimeout are specified in seconds and
+# refer to the corresponding HTTP 1.1 parameters.
+
+	<EndpointConfig http_tcp> 
+  		Port 80
+		ReadTimeout 480
+		KeepAliveTimeout 20 
+		ExternalProxy /usr/local/lib/eddie/bin/relay @control_port @ip @port
+	</EndpointConfig>
+
+# Admission control.
+# Admission control is used to limit the number of new clients 
+# in times of overload. It does so by keeping track of the IP
+# addresses of the clients. 
+# Clients may either be queued for later admission or rejected 
+# by the server (see AdmitAlways, AdmitNever, AdmitQueuePlaces, 
+# AdmitMaxSessions below).
+#
+# AdmitControl is used to turn Admission Control On or Off.
+# AdmitControl true | false
+	AdmitControl true
+
+# If a client has been granted
+# access to the server, it is regranted access until it does not 
+# arrive again within a specified period of time, AdmitTime. 
+# We recommend a default of 600 seconds to allow users to read and
+# think between downloading pages. This of course may be varied 
+# according to local requirements
+# AdmitTime Time 
+	AdmitTime 600
+
+# We can allow specific IP addresses to bypass admission control.
+# This provides a crude form of differentiated quality of service.
+# For example, those that pay always get access. Those that do not
+# may be rejected during periods of high load.
+# It is possible to specify A, B and C classes nets (e.g. 150.*.*.*,
+# 150.236.*.* and 150.236.20.*). Multiple IP Addresses may be 
+# specified.
+# AdmitAlways IPAddress 
+	AdmitAlways 150.236.14.*
+
+# These IP addresses are never admitted. This may be used to keep
+# banned users away from the server.
+# It is possible to specify A, B and C classes nets (e.g. 150.*.*.*,
+# 150.236.*.* and 150.236.20.*).
+# AdmitNever (IpAddress)  
+	AdmitNever 150.236.20.*
+
+# During periods of congestion, there is a limit placed on the 
+# number of clients that may be queued for later admission.
+# AdmitQueuePlaces N 
+	AdmitQueuePlaces 1000
+
+# There is a general limit on the total number of active sessions
+# that can be simultaneously serviced
+# AdmitMaxSessions N
+	AdmitMaxSessions 100
+
+# This page is sent to the client if it is blocked
+# by the `AdmitNever' configuration directive.
+# AdmitBlockedPage URI 
+	AdmitBlockedPage /eddie_admit_blocked
+
+# This page is sent to the client if it is rejected due to overload.
+# AdmitRejectPage URI 
+  AdmitRejectPage /eddie_admit_reject
+
+# This page is sent to the client if it is placed in
+# queue. It is assumed to be a CGI-script and is invoked as
+# `URI?place=N&amp;estimate=S&amp;reload=T'.
+# AdmitQueuePage URI 
+	AdmitQueuePage /eddie_admit_queue
+
+# Backend definitions.
+# The <Backend Endpointname Backendhost> directive configures a 
+# backend host to handle an endpoints jobs.
+# `Backendhost' refers to  the host where the backend runs 
+# (i.e. where Apache runs).
+#
+# The http protocol module has only one endpoint, http_tcp.
+# Thus all backend definitions for the http protocol
+# start with <Backend http_tcp ....>
+#
+# The SchedulePattern directive allows configuration of which 
+# incoming URIs can be sent to which backend. 
+# All URIs that start with one of the specified Schedulepatterns
+# may be scheduled to that particular backend.
+#
+# URIs starting with particular patterns may also be excluded from 
+# being sent to particular backends. A schedule line that starts 
+# with a ^ excludes all request lines matching the rest of the line.
+#
+# If there are many backends that match the
+# request line, the request is scheduled to one of the backends 
+# according to the load balancing parameters effective at the time.
+# Multiple Patterns may be defined within a single Schedule. 
+# In these cases, all must be matched simultaneously.
+#
+# The Proxy Ip Port configuration directive specifies the 
+# IP address and port on which the backend is accepting connections.
+
+	<Erlets admit_control>
+		<Erlet erlet_admit_ctrl>
+   	 	</Erlet>
+	</Erlets>
+
+	<Erlets status>
+		<Erlet erlet_status>
+		</Erlet>
+	</Erlets>
+
+# We now tell the front end nodes about the capabilities of the 
+# back end nodes. One block is required for each back end node.
+# Each erlang node running on the same computer requires a unique
+# name. For example, a set of three nodes with the names
+# eddie01@europa, eddie02@europa and eddie01@eva is OK. 
+
+# IMPORTANT NOTE: ALL NODE NAMES MUST START WITH LOWER CASE LETTERS
+# e.g. eddie01@eva is OK
+# but Eddie01@eva is NOT OK.
+# This has to do with the way Erlang interprets various things. 
+# Don't ask: just follow the instructions!
+
+# The backend erlang node eddie01 on computer europa uses IP address
+# 10.0.0.162, and Port 8001 for HTTP requests.
+# It can answer all URIs except those that begin with /eddie
+# It can answer requests for HTTP/1.0 but not HTTP/1.1
+# It can answer requests for www.eddieware.org but not www.example.org
+# IMPORTANT NOTE: In Eddie, all pattern matchings are case sensitive.
+# Also, the admission control relies on the ^/eddie URI, so do not remove it.
+	<Backend http_tcp eddie01@europa>
+		<Schedule>
+			Patterns uri / ^/eddie
+			Patterns method HTTP/1.0 ^HTTP/1.1
+			Patterns host www.eddieware.org ^www.example.org
+			Proxy 10.0.0.162 8001
+		</Schedule>
+
+# The backend erlang node eddie01 on computer eva uses IP address
+# 10.0.0.163, and Port 8001 for HTTP requests.
+# It can answer all URIs except those that begin with /load
+	<Backend http_tcp eddie01@eva>
+		<Schedule>
+			Patterns uri / ^/load
+			Proxy 10.0.0.163 8001
+		</Schedule>
+
+		<Schedule>
+	 		Patterns uri /eddie_status
+	 	 	Erlets status
+		</Schedule>
+
+		<Schedule>
+			Patterns uri /eddie_admit
+			Erlets admit_control
+			</Schedule>
+		</Backend>
+</Frontend>
+
+#----------------------------------------------------------------

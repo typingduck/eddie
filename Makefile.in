@@ -1,0 +1,322 @@
+### --------------------------------------------------------------------
+### File    : Makefile.in
+### Created : 22 Mar 1999 by tobbe@eddieware.org  
+### Apr 99 - geoff@eddieware.org - Extensive changes updates, install stuff 
+### Sep 99 - geoff@eddieware.org - $PRODUCT_NAME updates
+### 
+### The contents of this file are subject to the Erlang Public License
+### License, Version 1.0, (the "License"); you may not use this file
+### except in compliance with the License. You may obtain a copy of the
+### License at http://www.eddieware.org/EPL
+###
+### Software distributed under the License is distributed on an "AS IS"
+### basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+### the License for the specific language governing rights and limitations
+### under the License.
+###
+### The Original Code is Eddie-0.83b1.
+###
+### The Initial Developer of the Original Code is Ericsson Telecom
+### AB. Portions created by Ericsson are Copyright (C), 1998,1999 Ericsson
+### Telecom AB. All Rights Reserved.
+###
+### $Id: Makefile.in,v 1.1 2000/10/27 22:20:14 dredd Exp $
+### $Source: /cvsroot/eddie/eddie/Makefile.in,v $
+### $Revision: 1.1 $
+### $Date: 2000/10/27 22:20:14 $
+### $State: Exp $
+### --------------------------------------------------------------------
+  
+PACKAGE=eddie
+EDDIE_ROOT=@EDDIE_ROOT@
+EDDIE_USER=@EDDIE_USER@
+ADDUSER=@ADDUSER@
+install=./install-sh -c
+  
+#   Package installation root 
+#   (overrideable by package maintainers for
+#   rolling packages without bristling the system)
+root=
+
+include $(EDDIE_ROOT)/eddie.mk
+include $(EDDIE_ROOT)/vsn.mk
+
+installdir=$(root)$(INSTALL_ROOT)
+
+DATADIR=$(root)$(datadir)/$(PRODUCT_NAME)
+MIGFILE=$(root)$(sysconfdir)/$(PRODUCT_NAME).mig
+DNSBOOT=$(root)$(sysconfdir)/lb_dns.boot
+DIST=$(shell if [ -f $(MIGFILE) ]; then echo .dist; fi)
+LBDIST=$(shell if [ -f $(DNSBOOT) ]; then echo .dist; fi)
+GROUP_USER=$(shell if [ x$(EDDIE_USER) != x ]; then echo "-g $(EDDIE_USER)"; fi)
+OWNER_USER=$(shell if [ x$(EDDIE_USER) != x ]; then echo "-o $(EDDIE_USER)"; fi)
+
+all: master misc oam sync_nodes servant inet_server load_info \
+    dns_server lonelb ecmd system logger
+
+system:  true
+	(cd system;$(MAKE) $(EDDIE_VARS))
+	(cd dns_server/system;$(MAKE) $(EDDIE_VARS))
+
+#system_dns: all
+#	cd dns_server/system;$(MAKE) $(EDDIE_VARS)
+#
+#system_nodns: all
+#	cd system;$(MAKE) $(EDDIE_VARS)
+#
+#
+#
+# Each component of Eddie is built separately
+#
+
+master: true
+	cd master;$(MAKE) $(EDDIE_VARS)
+
+misc: true
+	cd misc;$(MAKE) $(EDDIE_VARS)
+
+oam: true
+	cd oam;$(MAKE) $(EDDIE_VARS)
+
+sync_nodes: true
+	cd sync_nodes;$(MAKE) $(EDDIE_VARS)
+
+servant: true
+	cd servant;$(MAKE) $(EDDIE_VARS)
+
+inet_server: true
+	cd inet_server;$(MAKE) $(EDDIE_VARS)
+
+lonelb: true
+	cd lonelb;$(MAKE) $(EDDIE_VARS)
+
+load_info: true
+	cd load_info;$(MAKE) $(EDDIE_VARS)
+
+dns_server: true
+	cd dns_server;$(MAKE) $(EDDIE_VARS)
+
+ecmd: true
+	cd ecmd;$(MAKE) $(EDDIE_VARS)
+
+logger: true
+	cd logger;$(MAKE) $(EDDIE_VARS)
+
+#
+# Install the components (given the existing hierarchy)
+# Needs to be run as root.
+#
+
+install: install-gateway install-$(TARGET_OS) install-dns
+	# Make a .eddie_path file
+	system/mk_dot_erlang.sh $(INSTALL_ROOT) $(root) > $(installdir)/bin/.$(PRODUCT_NAME)_path
+	@echo Eddie installation complete
+
+#
+# Common install stuff
+#
+
+install-common:
+	@echo Adding $(EDDIE_USER) user
+	-$(ADDUSER) $(EDDIE_USER)
+	-mkdir -p $(root)$(sbindir)
+	-mkdir -p $(installdir)/lib
+	-mkdir -p $(installdir)/bin
+	-mkdir -p $(root)$(sysconfdir)
+	-mkdir -p $(root)$(LOGDIR)
+	-$(install) -d -m 0775 $(GROUP_USER) $(root)$(LOGDIR)
+	-$(install) -m 0755 bin/ecmd$(EXE) $(installdir)/bin
+	# skel
+	#-cp system/skel $(installdir)/bin/skel
+	# Miscellaneous stuff is shared
+	-mkdir $(installdir)/lib/misc-$(MISC_VSN)
+	-cp -r misc/ebin $(installdir)/lib/misc-$(MISC_VSN)
+	-cp -r misc/priv $(installdir)/lib/misc-$(MISC_VSN)
+	# Docs & standard configs
+	-mkdir -p $(DATADIR)
+	-cp -r doc/common $(DATADIR)
+	-$(install) -m 0644 doc/README $(DATADIR)/README
+	# Lonelb code is shared
+	-mkdir $(installdir)/lib/lonelb-$(DNS_SERVER_VSN)
+	-cp -r lonelb/ebin $(installdir)/lib/lonelb-$(DNS_SERVER_VSN)
+	# Copy some conf files too..
+	-cp -r conf $(installdir)
+	-$(install) -m 0750 $(GROUP_USER) oam/priv/conf $(root)$(sysconfdir)/$(PRODUCT_NAME).conf$(DIST)
+	-$(install) -m 0750 $(GROUP_USER) oam/priv/conf $(root)$(sysconfdir)/$(PRODUCT_NAME).conf.dist
+	-$(install) -m 0644 oam/priv/mig $(root)$(sysconfdir)/$(PRODUCT_NAME).mig$(DIST)
+	-$(install) -m 0644 oam/priv/mig $(root)$(sysconfdir)/$(PRODUCT_NAME).mig.dist
+	-$(install) -m 0644 oam/priv/gate $(root)$(sysconfdir)/$(PRODUCT_NAME).gate$(DIST)
+	-$(install) -m 0644 oam/priv/gate $(root)$(sysconfdir)/$(PRODUCT_NAME).gate.dist
+    # Admission Control templates
+	-$(install) -m 0644  oam/src/queue.html $(root)$(sysconfdir)/tpl_queue.html$(DIST)
+	-$(install) -m 0644  oam/src/queue.html $(root)$(sysconfdir)/tpl_queue.html.dist
+	-$(install) -m 0644  oam/src/blocked.html $(root)$(sysconfdir)/tpl_blocked.html$(DIST)
+	-$(install) -m 0644  oam/src/blocked.html $(root)$(sysconfdir)/tpl_blocked.html.dist
+	-$(install) -m 0644  oam/src/reject.html $(root)$(sysconfdir)/tpl_reject.html$(DIST)
+	-$(install) -m 0644  oam/src/reject.html $(root)$(sysconfdir)/tpl_reject.html.dist
+
+
+#
+# Management application GUI
+#
+
+install-mgt:
+	-mkdir $(installdir)/lib/mgt_ui-$(MGT_VSN)
+	-cp -r mgt_ui/ebin $(installdir)/lib/mgt_ui-$(MGT_VSN)
+	-cp -r mgt_ui/priv $(installdir)/lib/mgt_ui-$(MGT_VSN)
+	-cp -r mgt_ui/images $(installdir)/lib
+    # Make a .path file with whatever is there
+	system/mk_dot_erlang.sh $(INSTALL_ROOT) $(root) > $(installdir)/bin/.$(PRODUCT_NAME)_path
+	-$(install) -m 0755 oam/priv/mgt $(root)$(sbindir)/$(PRODUCT_NAME)-mgt
+
+#
+# Load Balancing DNS maybe installed separately.
+# 
+
+install-dns: install-common
+	-$(install) -m 0444 system/loadinfo.boot $(installdir)/bin/loadinfo.boot
+	-$(install) -m 0444 LICENSE $(installdir)/LICENSE
+	-$(install) -m 0755 dns_server/priv/dns.boot $(installdir)/bin/dns.boot
+	-$(install) -m 0755 dns_server/priv/dns_sys.config $(installdir)/bin/dns_sys.config
+	-$(install) -m 0755 dns_server/priv/lbdns $(root)$(sbindir)/lbdns
+	-mkdir $(installdir)/lib/dns_server-$(DNS_SERVER_VSN)
+	-cp -r dns_server/ebin $(installdir)/lib/dns_server-$(DNS_SERVER_VSN)
+	-cp -r dns_server/priv $(installdir)/lib/dns_server-$(DNS_SERVER_VSN)
+	-cp -r dns_server/system/examples $(DATADIR)/dns
+	# Make a .eddie_path file
+	system/mk_dot_erlang.sh $(INSTALL_ROOT) $(root) > $(installdir)/bin/.$(PRODUCT_NAME)_path
+	-$(install) -o root -m 4755 misc/priv/fdsrv $(installdir)/lib/misc-$(MISC_VSN)/priv/fdsrv 
+	-$(install) -m 0644 dns_server/system/examples/lb_dns.boot $(root)$(sysconfdir)/lb_dns.boot$(LBDIST)
+	-$(install) -m 0644 dns_server/system/examples/lb_dns.boot $(root)$(sysconfdir)/lb_dns.boot.dist
+
+#
+# Eddie Gateway and load information servers installed here.
+#
+
+install-gateway: install-common
+	-$(install) -m 0755 oam/priv/start $(root)$(sbindir)/$(PRODUCT_NAME)
+	-$(install) -m 0444 system/eddie.boot $(installdir)/bin/eddie.boot
+	-$(install) -m 0444 system/sys.config $(installdir)/bin/sys.config
+	-$(install) -m 0755 servant/examples/start_httpd $(installdir)/bin
+	-$(install) -m 0755 servant/examples/stop_httpd $(installdir)/bin
+    # Library stuff
+	-mkdir $(installdir)/lib/sync_nodes-$(SYNC_NODES_VSN)
+	-cp -r sync_nodes/ebin $(installdir)/lib/sync_nodes-$(SYNC_NODES_VSN)
+	-cp -r sync_nodes/priv $(installdir)/lib/sync_nodes-$(SYNC_NODES_VSN)
+	-mkdir $(installdir)/lib/load_info-$(LOAD_INFO_VSN)
+	-cp -r load_info/ebin $(installdir)/lib/load_info-$(LOAD_INFO_VSN)
+	-cp -r load_info/priv $(installdir)/lib/load_info-$(LOAD_INFO_VSN)
+	-mkdir $(installdir)/lib/servant-$(SERVANT_VSN)
+	-cp -r servant/ebin $(installdir)/lib/servant-$(SERVANT_VSN)
+	-mkdir $(installdir)/lib/master-$(MASTER_VSN)
+	-cp -r master/ebin $(installdir)/lib/master-$(MASTER_VSN)
+	-cp -r master/priv $(installdir)/lib/master-$(MASTER_VSN)
+	-mkdir $(installdir)/lib/inet_server-$(INET_SERVER_VSN)
+	-cp -r inet_server/ebin $(installdir)/lib/inet_server-$(INET_SERVER_VSN)
+	-cp -r inet_server/priv $(installdir)/lib/inet_server-$(INET_SERVER_VSN)
+	-mkdir $(installdir)/lib/oam-$(OAM_VSN)
+	-cp -r oam/ebin $(installdir)/lib/oam-$(OAM_VSN)
+	-cp -r oam/priv $(installdir)/lib/oam-$(OAM_VSN)
+	# Make a .eddie_path file
+	system/mk_dot_erlang.sh $(INSTALL_ROOT) $(root) > $(installdir)/bin/.$(PRODUCT_NAME)_path
+	-mkdir $(installdir)/lib/servant-$(SERVANT_VSN)/priv
+	-$(install) -o root -m 4750 $(GROUP_USER) inet_server/priv/relay$(EXE) $(installdir)/bin/relay$(EXE)
+	-$(install) -o root -m 4750 $(GROUP_USER) inet_server/priv/$(SSL_RELAY)$(EXE) $(installdir)/bin/$(SSL_RELAY)$(EXE)
+	-$(install) -o root -m 4755 servant/priv/ifdel $(installdir)/lib/servant-$(SERVANT_VSN)/priv/ifdel 
+	-$(install) -o root -m 4755 servant/priv/ifadd $(installdir)/lib/servant-$(SERVANT_VSN)/priv/ifadd 
+	-$(install) -o root -m 4755 servant/priv/ifget $(installdir)/lib/servant-$(SERVANT_VSN)/priv/ifget 
+	-$(install) -o root -m 4755 servant/priv/routeadd $(installdir)/lib/servant-$(SERVANT_VSN)/priv/routeadd 
+	-$(install) -o root -m 4755 servant/priv/garp $(installdir)/lib/servant-$(SERVANT_VSN)/priv/garp 
+
+#
+# Subinstall stuff - these are ugly and I'd like to get rid of them
+# Should probably be handled by configure somehow.
+#
+
+install-cygwin:
+	cp load_info/priv/NTLoadCounter.exe $(installdir)/lib/load_info-$(LOAD_INFO_VSN)
+	-$(install) inet_server/priv/relay$(EXE) $(installdir)/bin/relay$(EXE)
+	-$(install) inet_server/priv/$(SSL_RELAY)$(EXE) $(installdir)/bin/$(SSL_RELAY)$(EXE)
+
+install-bsd:
+	cp load_info/priv/load_avg $(installdir)/lib/load_info-$(LOAD_INFO_VSN)
+
+install-solaris:
+
+install-linux:
+
+#
+# Package for release
+# Should be fixed to ignore CVS directories on build
+# (perhaps use a Manifest)
+# 
+
+package: veryclean
+	-cd ..; mv $(PACKAGE) $(PRODUCT_NAME)-$(EDDIE_VSN); tar --exclude CVS -cf - $(PRODUCT_NAME)-$(EDDIE_VSN) | gzip -c > /tmp/$(PRODUCT_NAME)-$(EDDIE_VSN).tar.gz; mv $(PRODUCT_NAME)-$(EDDIE_VSN) $(PACKAGE)
+	-mv /tmp/$(PRODUCT_NAME)-$(EDDIE_VSN).tar.gz .
+
+#
+# Package for testing
+#
+simple_package: veryclean
+	-cd ..; tar --exclude CVS cf - $(PACKAGE) | gzip -c > /tmp/$(PACKAGE).tar.gz 
+	-mv /tmp/$(PACKAGE).tar.gz .
+
+#
+# Clean up the mess
+#
+
+clean: clean_master clean_misc clean_oam clean_sync_nodes clean_servant clean_inet_server clean_load_info clean_dns_server clean_ecmd clean_system clean_lonelb 
+	-rm -f eddie_rootdir.beam eddie_rootdir.jam eddie_rootdir.result
+	-rm -f $(PRODUCT_NAME)-$(EDDIE_VSN).tar.gz 
+	-rm -rf lib/[a-z]*
+	-rm -f bin/[a-z]*
+
+veryclean: clean
+	-rm -f config.cache config.h configure.erl config.log
+	-rm -f eddie.mk Makefile 
+
+clean_master: true
+	cd master;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/master-$(MASTER_VSN)
+
+clean_misc: true
+	cd misc;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/misc-$(MISC_VSN)
+
+clean_oam: true
+	cd oam;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/oam-$(OAM_VSN)
+
+clean_sync_nodes: true
+	cd sync_nodes;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/sync_nodes-$(SYNC_NODES_VSN)
+
+clean_servant: true
+	cd servant;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/servant-$(SERVANT_VSN)
+
+clean_inet_server: true
+	cd inet_server;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/inet_server-$(INET_SERVER_VSN)
+
+clean_lonelb: true
+	cd lonelb;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/lonelb-$(DNS_SERVER_VSN)
+
+clean_load_info: true
+	cd load_info;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/load_info-$(LOAD_INFO_VSN)
+
+clean_dns_server: true
+	cd dns_server;$(MAKE) $(EDDIE_VARS) clean
+	cd dns_server/system;$(MAKE) $(EDDIE_VARS) clean
+	-rm -rf lib/dns_server-$(DNS_SERVER_VSN)
+
+clean_system: true
+	cd system; $(MAKE) $(EDDIE_VARS) clean
+
+clean_ecmd: true
+	cd ecmd;$(MAKE) clean
+
+true:

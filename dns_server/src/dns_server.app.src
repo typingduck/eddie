@@ -1,0 +1,15 @@
+{application, dns_server,
+ [
+  {description, "EDDIE  CXC xxx xx"},
+  {vsn, "%VSN%"},
+  {modules, [dns_app, dns_cache, dns_catalog, dns_domain_sup,
+             dns_load, dns_query, dns_recurse,
+             dns_rr, dns_server, dns_sup, dns_tcp_accept,
+             dns_zone, dns_xfr, dns_udp, dns_sig, dns_parse]},
+  {registered, [dns_load, dns_server, dns_cache, dns_catalog,
+                dns_domain_sup, dns_sup, dns_sig]},
+  {applications, [kernel,stdlib]},
+  {env, []},
+  {mod, {dns_app, []}}]}.
+
+

@@ -1,0 +1,111 @@
+#ifndef CONFIG_H
+
+/* find out the machine and OS */
+#undef CPU_VENDOR_OS
+#undef TARGET_CPU
+#undef TARGET_VENDOR
+#undef TARGET_OS
+
+/* paths */
+
+#undef IFCONFIG
+#undef ROUTE
+
+/* host defines */
+#undef BSD
+#undef LINUX
+#undef SOLARIS
+
+#undef HAVE_MSGHDR_MSG_CONTROL
+
+/* the following may have to be defined (for some Linuxes) */
+#undef BROKEN_CMSG_FIELDS
+
+/* host properties */
+#undef USE_IFALIAS
+#undef USE_BPF
+#undef USE_DLPI
+#undef USE_SOCKET
+
+/* sort out some basic header files */
+#undef STDC_HEADERS
+#undef HAVE_MALLOC_H 
+#undef HAVE_VARARGS_H 
+#undef HAVE_STRINGS_H
+#undef HAVE_FCNTL_H
+#undef HAVE_SYS_FCNTL_H
+#undef HAVE_SYS_DLPI_H
+#undef HAVE_NET_IF_PACKET_H
+#undef HAVE_NETINET_IF_ETHER_H
+#undef HAVE_NET_IF_ARP_H
+#undef HAVE_NET_BPF_H
+
+/* check for functions in certain headers */
+#undef STDLIB_MALLOC
+
+/* check for certain declarations */
+#undef HAVE_SYS_ERRLIST
+
+/* figure out basic integers and appropriate header files if available */
+#undef HAVE_int8_t
+#undef HAVE_u_int8_t
+#undef HAVE_int16_t
+#undef HAVE_u_int16_t
+#undef HAVE_int32_t
+#undef HAVE_u_int32_t
+#undef HAVE_int64_t
+#undef HAVE_u_int64_t
+
+#define SIZEOF_CHAR 0
+#define SIZEOF_SHORT 0
+#define SIZEOF_INT 0
+#define SIZEOF_LONG 0
+#define SIZEOF_LONG_LONG 0
+
+#undef BIT8
+#undef BIT16
+#undef BIT32
+#undef BIT64
+
+/* structures */
+#undef HAVE_sockaddr_dl 
+#undef HAVE_arpreq 
+#undef HAVE_ether_header
+#undef HAVE_caddr_t
+#undef HAVE_ethhdr
+#undef HAVE_in_addr
+#undef HAVE_sockaddr
+#undef HAVE_sockaddr_in
+
+/* defines */
+#undef HAVE_SIOCGIFHWADDR
+#undef HAVE_SIOCGIFCONF
+#undef HAVE_SIOCGARP
+#undef HAVE_DLIOCRAW
+#undef HAVE_ETHER_ADDR_LEN
+#undef HAVE_ETHERADDRL
+#undef HAVE_ETH_ALEN
+
+/* define fields in structures */
+#undef SA_LEN_IN_SOCKADDR
+#undef ETHER_HEADER_USES_ETHER_ADDR
+
+/* header files we need for things we found */
+#undef NEED_NET_ETHERNET_H
+#undef NEED_NET_IF_DL_H
+#undef NEED_SYS_ETHERNET_H
+#undef NEED_SYS_SOCKIO_H
+#undef NEED_SYS_SOCKETIO_H
+#undef NEED_SYS_SOCKET_H
+#undef NEED_NET_IF_ARP_H
+#undef NEED_NETINET_IN_H
+#undef NEED_SYS_BITYPES_H
+#undef NEED_SYS_TYPES_H
+#undef NEED_LINUX_SOCKIOS_H
+#undef NEED_NETINET_IF_ETHER_H
+
+/* uid for setuid programs which manipulate interfaces */ 
+#define EDDIE_UID 0
+
+#define CONFIG_H 1
+#endif

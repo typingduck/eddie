@@ -1,0 +1,58 @@
+1) What is this?
+
+This software package includes 
+the Intelligent HTTP Gateway. This package
+is referred to as the "Eddie base package" elsewhere.
+
+It is only meaningful to install the Eddie base package on a *set* of
+hosts. Never the less it is possible to simulate advanced clusters on
+a single host. Read the tutorial included in this package to do this.
+
+The other Eddie component is the Load-balancing DNS Server.
+
+The Intelligent HTTP Gateway is a peer which sits on top of back-end
+HTTP servers such as the Apache Web server. The gateway schedules
+requests to the least loaded back-ends on the LAN using adaptable
+load-balancing algorithms. It also analyzes incoming requests
+directing certain types of traffic to certain types of hosts using
+configurable scheduling patterns, e.g. CGI-script requests can be
+directed to host A and requests for static HTML pages to host B.
+
+The gateway also features advanced admission control mechanisms, it
+handles a session for each client and during server overload only
+clients with active sessions are granted access. A new client is put
+on hold (queued) during overload but is given a queue number and a
+rough estimate on when access is granted. The client is frequently and
+automatically reconnected as he/she advances in the queue. This
+behavior is fully configurable, e.g. customized put on hold HTML pages
+and CGI-scripts can be specified (commercials?). 
+
+If the Load-balancing DNS Server, or indeed a simple round-robin DNS
+server, and the IP Migration Application are used together several
+gateways can be used in parallel. This guarantees a solution with high
+throughput, high availability and a high degree of scalability. A
+single host can even harbor several gateways and back-ends at the same
+time if necessary. The gateways take this into account and the
+load-balancing algorithms adapt.
+
+The GAteway Application includes an IP Migration feature making
+it possible to set up overlapping take-over and fail-over sets using
+any type of servers. The goal is to be in service as long as at least
+one host is running. All aspects of the clustering are configurable
+and call-back scripts can be written to customize start, stop,
+monitoring and alarm handling. 
+
+2) Installation
+
+Read the installation and configuration manual at www.eddieware.org.
+
+3) Support
+
+If you have problems report this to talk@eddieware.org.
+
+Attach the following information:
+
+- A description of the problem.
+- Eddie package version and OS revision.
+- The log files, e.g. /var/tmp/eddie_eddie@zaphod.{1-5} *and*
+  the /var/tmp/eddie_log.eddie@zaphod directory.

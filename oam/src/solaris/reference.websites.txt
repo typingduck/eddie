@@ -1,0 +1,21 @@
+Reference sites:
+
+Erlang
+http://www.erlang.org
+
+Erlang Patches
+http://www.eddieware.org
+
+Sun Packaging How-To
+http://docs.sun.com/ab2/coll.45.13/PACKINSTALL/
+
+Open SSL
+http://www.openssl.org
+
+GNU
+http://www.gnu.org
+
+Solaris packages (including GNU ones)
+http://metalab.unc.edu/pub/packages/solaris/sparc/
+http://us-mirror.www.ainet.net/pub/direct/solaris/sparc/
+

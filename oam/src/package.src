@@ -1,0 +1,312 @@
+#!/bin/sh
+#
+# Auto-Packager.
+#
+# Automagically copies itself to the specified machines
+# Works out what machines they are 
+# Then works out how to build a package for that system
+#
+# BUILDER users should be able to "sudo" without a password
+#
+# Author: Geoff Wong, Oct 1999.
+#
+
+MODULE=eddie
+PRODUCT=%PRODUCT_NAME%
+VERSION=%VERSION%
+EDDIE_USER=%EDDIE_USER%
+RCP=scp
+RSH=ssh
+TAR=tar
+RELEASE=1
+BRANCH=
+BRANCHNAME=
+
+
+myself=`basename $0`
+user=`whoami`
+osinstall=`uname`
+osversion=`uname -r`
+cwd=`pwd`
+
+
+BUILDER=geoff
+# must bee root for FreeBSD builds...
+#BUILDER=root
+
+CVS_HOST=@eddieware.eddieware.org:/cvs
+PATH=/bin:/usr/bin:$PATH
+TMP_PATH=/tmp/package
+RELEASE_PATH=$TMP_PATH/release
+
+
+PORT_LOCN=/usr/ports
+
+USAGE="$myself [ -r release ] [ -u user ] [ -b branch ] <start|package> [ nodelist ]"
+
+#
+# Handle flags here
+#
+if [ $# -ge 1 ]
+then
+    while getopts :b:r:u: c
+    do
+    case $c in
+    b)
+        BRANCHNAME="-b $OPTARG"
+        BRANCH="-r $OPTARG"
+        ;;
+    r)
+        RELEASE="$OPTARG"
+        ;;
+    u)
+        BUILDER="$OPTARG"
+        ;;
+    \?)
+        printf "Usage: %s\n" "$USAGE"
+        exit 1;;
+    esac
+    done
+fi
+
+shift `expr $OPTIND - 1`
+
+#
+# Name: checkout
+# Purpose: checkout most recent version and make a clean tarball
+#
+
+checkout()
+{
+    rm -rf $TMP_PATH
+    mkdir $TMP_PATH
+    cd $TMP_PATH
+    cvs -d $user@$CVS_HOST checkout $BRANCH $MODULE
+    cd $MODULE
+    ./configure 
+    make package
+    # Copy package somewhere known..
+    cp $PRODUCT-$VERSION.tar.gz $TMP_PATH
+
+
+    # FreeBSD port template (built as a tarball)
+    # Needed to build package (uses own Makefile)
+	cd $TMP_PATH/$MODULE/oam/src
+    $TAR cf $PRODUCT-templ.tar $PRODUCT
+}
+
+
+#
+# Name: preinstall
+# Purpose: copy ourselves and possible package scripts to the nodes we're 
+#   going to work on
+#
+
+preinstall()
+{
+
+    for node in $*; do
+        $RSH $node mkdir -p $TMP_PATH
+        $RSH $node mkdir -p $RELEASE_PATH
+        $RCP $cwd/$myself @$node:$TMP_PATH
+        $RCP $TMP_PATH/$MODULE/oam/src/rpm.spec.src @$node:$TMP_PATH
+        $RCP $TMP_PATH/$PRODUCT-$VERSION.tar.gz @$node:$TMP_PATH
+
+        # FreeBSD stuff
+        $RCP $PRODUCT-templ.tar @$node:$TMP_PATH
+    done
+}
+
+#
+# Name: package_linux
+# Purpose: build RPMs
+#
+
+package_linux()
+{
+    release=$1
+
+    cd $TMP_PATH
+    sudo cp $TMP_PATH/$PRODUCT-$VERSION.tar.gz /usr/src/redhat/SOURCES
+    sed -e s/%PRODVERSION%/$VERSION/ -e s/%REDHATRELEASE%/$release/ \
+        -e s/%PRODRELEASE%/$RELEASE/ -e s/%PRODUSER%/$EDDIE_USER/ \
+        $TMP_PATH/rpm.spec.src > $TMP_PATH/$PRODUCT-$VERSION.spec
+    sudo cp $PRODUCT-$VERSION.spec /usr/src/redhat/SPECS
+    sudo rpm -ba /usr/src/redhat/SPECS/$PRODUCT-$VERSION.spec 
+
+    # Then copy it to $RELEASE_PATH
+    sudo cp /usr/src/redhat/RPMS/i386/$PRODUCT-$VERSION-$RELEASE.$release.i[36]86.rpm $RELEASE_PATH
+}
+
+#
+# Name: package_freebsd
+# Purpose: build Ports & Packages
+#
+
+package_freebsd()
+{
+    release=$1
+
+    # Delete any existing temp builds
+    rm -rf /usr/tmp/$PRODUCT-$VERSION
+
+    cd $PORT_LOCN
+    sudo tar xf $TMP_PATH/$PRODUCT-templ.tar
+
+	# Copy in the tar file to distfiles
+    sudo cp $TMP_PATH/$PRODUCT-$VERSION.tar.gz /usr/ports/distfiles
+
+	# clean out any existing package installation
+	sudo pkg_delete $PRODUCT-$VERSION
+
+    # Refresh DISTNAME, PRODUCT and VERSION vars in makefile
+    cd $PORT_LOCN/$PRODUCT
+	sudo sed -e s/%PRODUCT%/$PRODUCT/g -e s/%PRODVERSION%/$VERSION/g \
+            Makefile.tmpl > Makefile
+
+    # Recalculate md5 checksum.
+	sudo make makesum
+
+	# build a new packing list (PLIST). warning: this doesn't pick up
+    # empty directories correctly - a fix is on the way but place a 
+	# ".KEEPME" file in any empty directories until then...
+	sudo make create-plist
+
+	# clean up the dags.
+	sudo pkg_delete $PRODUCT-$VERSION
+	sudo rm -rfd work
+
+    # Build it all
+    sudo make NO_CHECKSUM=yes
+    sudo make install
+    sudo make package
+    sudo make clean
+    # remove the old package
+	sudo pkg_delete $PRODUCT-$VERSION
+
+    # Then copy it to $RELEASE_PATH 
+    # sudo cp /usr/ports/distfiles/$PRODUCT-$VERSION.tar.gz $RELEASE_PATH/$PRODUCT-$VERSION-$release.tar.gz
+    sudo cp /usr/ports/$PRODUCT/$PRODUCT-$VERSION.tgz $RELEASE_PATH/$PRODUCT-$VERSION-$release.tgz
+}
+
+#
+# Name: package_sunos
+# Purpose: build some tarballs since Sunos doesn't have a 
+#   standard packaging mechanism.
+#
+
+package_sunos()
+{
+    cd $TMP_PATH
+    SUNSRC=${PRODUCT}-${VERSION}
+    rm -rf $SUNSRC
+    gzip -dc ${SUNSRC}.tar.gz | tar xf -
+    cp ${SUNSRC}/oam/src/solaris/eddie-pkginfo .
+    cp ${SUNSRC}/oam/src/solaris/eddie-request .
+    cp ${SUNSRC}/oam/src/solaris/eddie-postinstall .
+    cp ${SUNSRC}/oam/src/solaris/eddie-depend .
+    sudo ${SUNSRC}/oam/src/solaris/eddie-build-and-pkg.sh $PRODUCT $VERSION $RELEASE
+    sudo find $TMP_PATH/test_pit -name "*.pkg" -exec cp {} $RELEASE_PATH \;
+
+}
+
+#
+# Name: package
+# Purpose: start up the packaging on each machine
+#
+
+package()
+{
+    case $osinstall in
+    Linux)
+        # Stab at the redhat (or other) release
+        if [ -f /etc/redhat-release ]; then
+            possible=`cat /etc/redhat-release`
+            case $possible in
+                *6.2*)
+                    release=6.2
+                    ;;
+                *6.1*)
+                    release=6.1
+                    ;;
+                *6.0*)
+                    release=6.0
+                    ;;
+                *5.2*)
+                    release=5.2
+                    ;;
+                *)
+                    release=`echo $osversion | cut -f1 -d'-'`
+                    ;;
+            esac
+        else
+            release=`echo $osversion | cut -f1 -d'-'`
+        fi
+        package_linux $release
+    ;;
+    FreeBSD)
+        possible=$osversion
+        release=`echo $osversion | cut -f1 -d'-'`
+        package_freebsd $release
+    ;;
+    SunOS)
+        package_sunos $osversion
+    ;;
+    *)
+        echo Operating system $osinstall package not implemented yet.
+        exit 1
+    ;;
+    esac
+}
+
+#
+# Name: clean
+# Purpose: clean up any mess we've created
+#
+
+clean()
+{
+    echo Cleaning up the mess
+}
+
+
+#
+# Main body.
+#
+
+
+if [ $# -ge 1 ]; then
+    directive=$1
+    shift 1
+    case $directive in
+    "package")
+        package
+        ;;
+    "start")
+        checkout
+        preinstall $*
+        # preinstall $allnodes
+        for node in $*; do
+            $RSH $BUILDER@$node $TMP_PATH/$myself -r $RELEASE $BRANCHNAME package &
+        done
+
+        echo Sleeping 8 mins and waiting for builds to be completed
+        sleep 480
+        
+        # Copying binaries back..
+        mkdir -p $RELEASE_PATH
+        for node in $*; do
+            $RCP $BUILDER@$node:$RELEASE_PATH/* $RELEASE_PATH
+        done
+
+        clean $*
+        ;;
+    *)
+        echo $USAGE
+        ;;
+    esac
+else
+    echo $USAGE
+fi
+
+

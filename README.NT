@@ -1,0 +1,71 @@
+
+
+Eddie 1.4.2 Note:
+
+Windows NT does not work, but it's not that far away.
+You'll need to get the relay code in inet_server/c_src working and get
+the script stuff in oam/src/*.src working under bash under windows.
+The gateway stuff is pretty much useful because Cygwin select() is
+really slow. inet_server/c_src code probably should be rewritten
+using io ports under NT.
+
+The rest of this document is now out of date but may give
+you some useful pointers.
+
+Software requirements
+~~~~~~~~~~~~~~~~~~~~~
+
+1. Cygwin tools from http://sourceware.cygnus.com/cygwin.
+   Eddie was tested with cygwin B20.1 successfully.
+
+2. GNU autoconf from ftp://prep.ai.mit.edu/pub/gnu/autoconf (or mirror site).
+   It should compile out of the box using Cygwin tools.
+   Eddie was tested with autoconf 2.13 successfully.
+
+3. Microsoft Visual C++ v4.0 or newer.
+   This compiler is required for Windows NT system-level programs.
+
+4. Open Source Erlang from http://www.erlang.org.
+
+
+Installation
+~~~~~~~~~~~~
+
+0.  Run the bash shell from cygwin and use that as the installation
+    environment.
+
+1.  Make sure you have Open Source Erlang installed
+    (http://www.erlang.org).
+
+    Ensure "erl" & "erlc" are in your standard path.
+
+2.  Unpack this(!) source where you want all the Erlang binaries
+    to reside.
+
+3.  sh configure
+
+4.  make
+
+5.  make install
+
+    This should build Eddie succsessfully. Getting Eddie
+    running requires an understanding of how your want to configure
+    your cluster(s). Please read the documentation in the doc/ subtrees.
+
+    Put $EDDIE_ROOT/bin in your path!
+
+    This process needs to be repeated for each machine you
+    install Eddie on.
+
+Notes
+~~~~~
+
+1. The Bourne shell that comes with Cygwin does not have features
+   such as getopt. Run the eddie script 
+   with the bash shell (i.e. bash eddie init -c Cookie -d d:/database ....)..
+
+2. IP migration is not available for Windows NT. NT does not have
+   a means for adding/removing IP aliases without rebooting. Consequently,
+   the "AutoConfig" directives in the configuration files must be set to
+   "Off", otherwise, a runtime error will result.
+

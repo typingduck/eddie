@@ -1,0 +1,8 @@
+@ IN SOA     mm.foobarcorp.com.au. foobarcorp.com.au. (
+     199903171 ; Serial
+     21600     ; Refresh (6 hours)
+     3600      ; Retry (1 hour)
+     2592000   ; Expire (1 month)
+     86400 )   ; Minimum (1 day)
+  IN NS      mm.foobarcorp.com.au.
+1.0.0 IN PTR localhost.

@@ -1,0 +1,21 @@
+@ IN SOA     super.du.etx.ericsson.se. lsa.erix.ericsson.se. (
+     199803171 ; Serial
+     21600     ; Refresh (6 hours)
+     3600      ; Retry (1 hour)
+     2592000   ; Expire (1 month)
+     86400 )   ; Minimum (1 day)
+  IN NS      super.du.etx.ericsson.se.
+  IN NS      malmen.ericsson.se.
+251 IN PTR router-21.du.etx.ericsson.se.
+231 IN PTR lme-pc01.du.etx.ericsson.se.
+232 IN PTR lme-pc02.du.etx.ericsson.se.
+233 IN PTR lme-pc03.du.etx.ericsson.se.
+234 IN PTR lme-pc04.du.etx.ericsson.se.
+235 IN PTR lme-pc05.du.etx.ericsson.se.
+236 IN PTR lme-pc06.du.etx.ericsson.se.
+237 IN PTR lme-pc07.du.etx.ericsson.se.
+238 IN PTR lme-pc08.du.etx.ericsson.se.
+239 IN PTR lme-pc09.du.etx.ericsson.se.
+240 IN PTR lme-pc10.du.etx.ericsson.se.
+241 IN PTR lme-pc11.du.etx.ericsson.se.
+242 IN PTR lme-pc12.du.etx.ericsson.se.

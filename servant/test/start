@@ -1,0 +1,44 @@
+#!/bin/sh
+
+USAGE="Usage:  start [-n] [-p Directory] Node
+
+Start an Eddie node.
+
+-n
+    Start a vanilla Erlang node without Eddie applications, i.e. to be
+    used in combination with the add and delete commands.
+-p
+    Add a Directory to the head of the search path of the code server
+    as described in code(3)."
+
+while getopts :c:np: c
+do
+    case $c in
+	c)
+	    erl_config=$OPTARG;;
+        n)
+	    node=true;;
+        p)
+	    path="$OPTARG $path";;
+	\?)
+	    printf "%s\n" "$USAGE"
+	    exit 2;;
+    esac
+done
+
+shift `expr $OPTIND - 1`
+
+if [ $# -eq 1 ]; then
+    rm /tmp/dummy_dets.$1 > /dev/null 2>&1
+    name=`echo $1|sed -e "s/@[^@]*$//"`
+
+    if [ $node ]; then
+	erl -pa $path -pa $EDDIE_ROOT/oam/ebin -sname $name -mnesia dir \"/tmp/db_$1\" -s mnesia start
+    else
+	erl -config ${erl_config:-eddie} -pa $path -sname $name -mnesia dir \"/tmp/db_$1\" -boot start
+    fi
+else
+    printf "%s\n" "$USAGE"
+    exit 2
+fi
+

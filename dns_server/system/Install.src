@@ -1,0 +1,29 @@
+#!/bin/sh
+INSTALL_ROOT=`pwd`
+ERL_ROOT= "ERLANG ROOT DIR"
+
+if [ ! -d bin ]
+then
+        mkdir bin
+fi
+
+sed -e "s;%ROOTDIR%;$INSTALL_ROOT;" \
+    -e "s;%ERL_ROOT%;$ERL_ROOT;" install/start.src > bin/lbdns
+chmod 755 bin/lbdns
+
+sed -e "s;%EMU%;%EMULATOR%%EMULATOR_NUMBER%;" $INSTALL_ROOT/install/start_erl > bin/start_erl
+chmod 755 bin/start_erl
+
+sed -e "s;%ERTS_VSN%;%I_VSN%;" \
+    -e "s;%DNS_VSN%;%I_SYSTEM_VSN%;" install/start_erl.data.src > releases/start_erl.data
+
+sed -e "s;%MF_BYTES%;512000;" \
+    -e "s;%MF_FILES%;5;" install/sys.config.src > releases/%I_SYSTEM_VSN%/sys.config
+
+ln -s misc-%MISC_VSN% lib/misc
+ln -s dns_server-%DNS_SERVER_VSN% lib/dns_server
+
+
+
+
+

@@ -1,0 +1,6 @@
+{release, {"dns","P1B"}, {erts, "4.7.1"},
+ [{kernel,"2.1"},
+  {stdlib,"1.5.1"},
+  {sasl, "1.6.1"},
+  {dns_server, "0.6"}]}.
+
