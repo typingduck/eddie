@@ -74,11 +74,11 @@ s%@build_vendor@%pc%g
 s%@build_os@%linux-gnu%g
 s%@ac_cv_gmake@%/usr/bin/gmake%g
 s%@MAKE@%gmake%g
-s%@ac_cv_rsh@%/usr/local/bin/ssh%g
+s%@ac_cv_rsh@%/usr/bin/ssh%g
 s%@EDDIE_RSH@%ssh -f%g
 s%@ERL_CALL@%ecmd -ssh%g
-s%@ac_cv_eddie_root@%/u/geoff/stable/eddie/eddie_rootdir.erl%g
-s%@EDDIE_ROOT@%/u/geoff/stable/eddie%g
+s%@ac_cv_eddie_root@%/home/geoff/eddie/eddie_rootdir.erl%g
+s%@EDDIE_ROOT@%/home/geoff/eddie%g
 s%@ac_cv_erl@%/usr/local/bin/erl%g
 s%@ERL@%/usr/local/bin/erl%g
 s%@ac_cv_erlc@%/usr/local/bin/erlc%g
