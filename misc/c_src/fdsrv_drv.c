@@ -40,37 +40,39 @@ Contributor(s): ______________________________________.
 #include <sys/uio.h>
 #include <sys/un.h>
 #include "config.h"
-#include "driver.h"		/* Erlang driver definitions */
+#include "erl_driver.h"		/* Erlang driver definitions */
 
 /* forward declarations */
-static long start();
-static int stop();
-static int fd_is_ready();
+static ErlDrvData start(ErlDrvPort, char *);
+static void stop(ErlDrvData);
+static void fd_is_ready(ErlDrvData, ErlDrvEvent);
 static void recv_fd();
 
 /* driver global variables */
 static int instance = -1;
 static int  fdsrv;
 
+static int null_func() { return 0; }
+static void null_void() { }
+
 /* driver structure entry */
 #ifdef DYNAMIC_DRIVER
 static
 #endif
-struct driver_entry fdsrv_drv_entry = {
+struct erl_drv_entry fdsrv_drv_entry = {
     null_func,
     start,
     stop,
-    null_func,
+    null_void,
     fd_is_ready,
-    null_func,
+    null_void,
     "fdsrv_drv"
 };
 
 #ifdef DYNAMIC_DRIVER
-DriverEntry *driver_init(handle)
-    void *handle;
+ErlDrvEntry *driver_init(void * handle)
 {
-    fdsrv_drv_entry.finish = null_func;
+    fdsrv_drv_entry.finish = null_void;
     fdsrv_drv_entry.handle = handle;
     return &fdsrv_drv_entry;
 }
@@ -79,18 +81,16 @@ DriverEntry *driver_init(handle)
 /*
  * Called when erlang side does "open_port()".
  */
-static long start(port, buf)
-    long port;
-    char *buf;
+static ErlDrvData start(ErlDrvPort port, char * buf)
 {
     int len;
     char *path;
     struct sockaddr_un addr;
 
     if (instance != -1)		/* only allow one copy at the time */
-	return -1;
+	return NULL;
     if (strlen(buf) > (sizeof(addr.sun_path) + 1))
-	return -1;
+	return NULL;
     instance = port;
 
     /* Figure out the path to the named socket */
@@ -108,30 +108,29 @@ static long start(port, buf)
     if (connect(fdsrv, (struct sockaddr *)&addr, len) < 0) {
 	perror("connect");
 	instance = -1;
-	return -1;
+	return NULL;
     }
 
     /* Have Erlang select on fdsrv */
     driver_select(port, fdsrv, DO_READ, 1);
 
+    // FIX: returns a structure now (argh stupid API changes))
     return port;
 }
 
 /*
  * Called when select triggers. Which is when there is an incomming fd.
  */
-static int fd_is_ready(port, readyfd)
-    int port;
-    int readyfd;
+static void fd_is_ready(ErlDrvData port, ErlDrvEvent readyfd)
 {
     int received_fd;
     int len;
     char buf[256];
 	
     if (port != instance)
-	return -1;
+	return;
     if (readyfd != fdsrv)
-	return -1;
+	return;
 
     /* receive the file descriptor */
     recv_fd(&received_fd, fdsrv);
@@ -141,13 +140,13 @@ static int fd_is_ready(port, readyfd)
     len = strlen(buf);
     driver_output(port, buf, len);
     
-    return 0;
+    return;
 }
 
 /*
  * Called when the Erlang port is closed.
  */
-static int stop()
+static void stop(ErlDrvData drv_data)
 {
     /* make sure we stop Erlang from selecting on fdsrv */
     driver_select(instance, fdsrv, DO_READ, 0);
@@ -156,7 +155,7 @@ static int stop()
     close(fdsrv);
     instance = -1;
     
-    return 0;
+    return;
 }
 
 
@@ -265,7 +264,6 @@ error:
 }
 
 
-int null_func() { return 0; }
 
 #ifdef TEST
 /*

@@ -35,32 +35,35 @@
 #include <sys/un.h>
 #include <syslog.h>
 #include "config.h"
-#include "driver.h"		/* Erlang driver definitions */
+#include "erl_driver.h"		/* Erlang driver definitions */
 
 /* forward declarations */
-static long log_start(long port, char * buf);
-static int log_stop();
-static int log_ready(int port, int readyfd);
-static int log_output();
+static ErlDrvData log_start(ErlDrvPort port, char * buf);
+static void log_stop();
+static void log_ready(int port, int readyfd);
+static void log_output();
 static void recv_log(int sock_fd, int * priority, char * buf);
 
 /* driver global variables */
 static int instance = -1;
 static int log_port;
 
+static int null_func() { return 0; }
+static void null_void() { }
+
 /* driver structure entry */
-struct driver_entry syslog_entry = 
+struct erl_drv_entry syslog_entry = 
 {
     null_func,
     log_start,
     log_stop,
     log_output,
-    null_func,
-    null_func,
+    null_void,
+    null_void,
     "syslog_drv"
 };
 
-DriverEntry *driver_init(void * handle)
+ErlDrvEntry *driver_init(void * handle)
 {
     syslog_entry.finish = null_func;
     syslog_entry.handle = handle;
@@ -70,7 +73,7 @@ DriverEntry *driver_init(void * handle)
 /*
  * Called when erlang side does "open_port()".
  */
-static long log_start(long port, char * buf)
+static ErlDrvData log_start(ErlDrvPort port, char * buf)
 {
     log_port = port;
 
@@ -117,11 +120,11 @@ static long log_start(long port, char * buf)
  * Called when erlang wants to send output to the port
  */
 
-static int log_output(long port, char * buf, int len)
+static void log_output(long port, char * buf, int len)
 {
     int priority, amt;
 
-    if (!buf) return 0;
+    if (!buf) return;
 
     switch (buf[0])
     {
@@ -144,7 +147,7 @@ static int log_output(long port, char * buf, int len)
 
     syslog(priority, &(buf[1]));
 
-    return 0;
+    return;
 }
 
 /*
@@ -152,7 +155,7 @@ static int log_output(long port, char * buf, int len)
  */
 
 #define MAX_LOG 1024
-static int log_ready(int port, int readyfd)
+static void log_ready(int port, int readyfd)
 {
     int received_fd;
     int len;
@@ -169,13 +172,13 @@ static int log_ready(int port, int readyfd)
     syslog(priority, buf);
 #endif
     
-    return 0;
+    return;
 }
 
 /*
  * Called when the Erlang port is closed.
  */
-static int log_stop()
+static void log_stop()
 {
 #if 0
     /* make sure we stop Erlang from selecting on fdsrv */
@@ -188,7 +191,7 @@ static int log_stop()
     /* cleanup */
     close(log_port);
     
-    return 0;
+    return;
 }
 
 
