@@ -21,7 +21,7 @@
 
 -module(erlet_admit_ctrl).
 -author('patrik@punsch').
--vc('$Id: erlet_admit_ctrl.erl,v 1.1 2000/10/27 22:20:25 dredd Exp $ ').
+-vc('$Id: erlet_admit_ctrl.erl,v 1.2 2000/10/31 18:03:47 dredd Exp $ ').
 
 -include("inet_server.hrl").
 
@@ -131,7 +131,7 @@ do(State, Req) when list(Req) ->
 				   integer_to_list(length(Mess)),
 				   "\r\n\r\n",
 				   Mess])};
-	 [$G,$E,$T,$ ,$/,$l, $o, $d, $b, $r, $o, $k, $e, $r,$_,$a,$d,$m,$i,$t,$_,$r,$e,$j,$e,$c,$t,
+	 [$G,$E,$T,$ ,$/,$e, $d, $d, $i, $e, $_,$a,$d,$m,$i,$t,$_,$r,$e,$j,$e,$c,$t,
 	  $ ,$H,$T,$T,$P,$/,$1,$.,$0,$\r,$\n,$\r,$\n] ->
 	     Mess =
 		 lists:append(["<HTML>"
@@ -161,7 +161,7 @@ do(State, Req) when list(Req) ->
 				   integer_to_list(length(Mess)),
 				   "\r\n\r\n",
 				   Mess])};
-	 [$G,$E,$T,$ ,$/,$l, $o, $d, $b, $r, $o, $k, $e, $r,$_,$a,$d,$m,$i,$t,$_,$b,$l,$o,$c,$k,$e,$d,
+	 [$G,$E,$T,$ ,$/,$e, $d, $d, $i, $e, $_,$a,$d,$m,$i,$t,$_,$b,$l,$o,$c,$k,$e,$d,
 	  $ ,$H,$T,$T,$P,$/,$1,$.,$0,$\r,$\n,$\r,$\n] ->
 	     Mess =
 		 lists:append(["<HTML>"
