@@ -1,5 +1,5 @@
 
-Release Notes - Eddie 1.4.2
+Release Notes - Eddie 1.5.3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. Documentation hasn't kept pace with the code.
@@ -9,7 +9,7 @@ Release Notes - Eddie 1.4.2
    Documentation should be updated when our tech-writer gets
    back from holiday!
 
-2. Windows NT doesn't currently work properly with 1.4.2
+2. Windows NT doesn't currently work properly with 1.5.3
 
 3. Major changes were made to the Intelligent HTTP Gateway. 
    A number of separate "relay" processes are now spawned to 
@@ -81,11 +81,11 @@ Release Notes - Eddie 1.4.2
    return a lot of useful information (yet).
    
 
-6. Questions to talk@eddieware.org please! 
+6. Questions to mickael.remond@erlang-fr.org please! 
 
 
 Geoff
-geoff@eddieware.org
+dredd@users.sourceforge.net
 
 
 

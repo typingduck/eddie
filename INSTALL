@@ -1,17 +1,18 @@
-
-Eddie (1.4.2)
+Eddie (1.5.3)
 ~~~~~~~~~~~~~
 
 We have recently built Eddie successfully for:
-    * Linux (Redhat 6.x, SuSE 6.x, Mandrake 7.x),
+    * Linux (Redhat 6.x, SuSE 6.x, Mandrake 9.x),
     * Solaris (2.6.0, 7.0)
 
 Installation directions:
 
-1.  Make sure you have a patched Open Source Erlang installed
-    (http://www.eddieware.org/erlang).
+1.  Install Erlang/OTP R9B-1 (http://www.erlang.org/download.html)
 
     Ensure "erl" & "erlc" are in your standard path.
+  
+    Erlang must be compiled with SSL support. Check that the Erlang crypto
+    module is properly installed on your system.
 
 2.  Unpack this(!) source archive.
 
@@ -56,11 +57,13 @@ Installation directions:
 More information:
 
 A full installation guide is available with other information
-about Eddie at http://www.eddieware.org.
+about Eddie at http://eddie.sourceforge.net/
 
 
-Please mail any problems to team@eddieware.org.
+Please mail any problems to mickael.remond@erlang-fr.org who will relay to
+Eddieware team.
 
-geoff@eddieware.org.
+geoff (Eddieware)
+dredd@users.sourceforge.net
 
 
