@@ -1,6 +1,6 @@
 
-ERTS_VSN      = 5.0.1
-SYSTEM_VSN    = 1.2
+ERTS_VSN      = 5.0.1.1
+SYSTEM_VSN    = 1.5.1
 
 KERNEL_VSN    = 2.6.1.5
 STDLIB_VSN    = 1.9.2
@@ -8,7 +8,7 @@ SASL_VSN      = 1.9.1
 OS_MON_VSN    = 1.3.9
 MNESIA_VSN    = 3.9.3
 MNEMOSYNE_VSN = 1.2.5
-ERL_INTERFACE_VSN = 3.2.3
+ERL_INTERFACE_VSN = 3.2.4
 
 
 
