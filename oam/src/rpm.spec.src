@@ -8,7 +8,7 @@ Name: eddie
 ##### Need to be substituted. #####
 %define rhrel %REDHATRELEASE%
 #Requires: redhat-release < 6.0
-Requires: redhat-release >= 6.0
+#Requires: redhat-release >= 6.0
 #
 #Requires: erlang >= 47.4.1
 %define rel %PRODRELEASE%
@@ -19,8 +19,8 @@ Group: Networking/Daemons
 Source0: eddie-%{version}.tar.gz
 Provides: eddie
 BuildRoot: /var/tmp/eddie-root
-URL: http://www.eddieware.org/
-Packager: geoff@eddieware.org
+URL: http://eddie.sourceforget.net
+Packager: geoff@shattered.org
 
 
 %description
