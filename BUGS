@@ -9,6 +9,11 @@ Key:
     ? confused
     - will not fix
 
+1.5.0
+
+    the use of htonl() on the return from inet_aton(). Not
+    a good idea when the result of htonl() is passed to gethostbyaddr()
+
 1.4.2
 
     BIND 8 is not supported.
