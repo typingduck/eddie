@@ -2,7 +2,7 @@
 # Generated automatically by configure.
 # Run this file to recreate the current configuration.
 # This directory was configured as follows,
-# on host isis:
+# on host seker.zikzak.com.au:
 #
 # ./configure 
 #
@@ -88,6 +88,7 @@ s%@WHOAMI@%/usr/bin/whoami%g
 s%@ac_cv_adduser@%no%g
 s%@ac_cv_useradd@%/usr/sbin/groupadd%g
 s%@LOGDIR@%/var/eddie%g
+s%@INSTALL_DOC@%doc%g
 s%@EMULATOR@%beam%g
 s%@ERLDIR@%/usr/local/lib/erlang%g
 s%@TARGET_OS@%linux%g
@@ -103,8 +104,9 @@ s%@ac_cv_ifconfig@%/sbin/ifconfig%g
 s%@ac_cv_route@%/sbin/route%g
 s%@CPP@%gcc -E%g
 s%@SSL_RELAY@%ssl_relay%g
-s%@SSL_INCLUDE@%-I/usr/local/ssl/include%g
-s%@SSL_LIB_PATH@%-L/usr/local/ssl/lib%g
+s%@SSL_INCLUDE@%-I/usr/include%g
+s%@SSL_LIB_PATH@%-L/usr/lib%g
+s%@SSL_LIB_DIR@%/usr/lib%g
 s%@ac_cv_limit@%no%g
 s%@LIMIT@%%g
 s%@CPU_SUP@%false%g
@@ -325,9 +327,9 @@ CEOF
 ${ac_dA}HAVE_NETINET_IF_ETHER_H${ac_dB}HAVE_NETINET_IF_ETHER_H${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_NETINET_IF_ETHER_H${ac_uB}HAVE_NETINET_IF_ETHER_H${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_NETINET_IF_ETHER_H${ac_eB}HAVE_NETINET_IF_ETHER_H${ac_eC}1${ac_eD}
-${ac_dA}HAVE_OPENSSLV_H${ac_dB}HAVE_OPENSSLV_H${ac_dC}1${ac_dD}
-${ac_uA}HAVE_OPENSSLV_H${ac_uB}HAVE_OPENSSLV_H${ac_uC}1${ac_uD}
-${ac_eA}HAVE_OPENSSLV_H${ac_eB}HAVE_OPENSSLV_H${ac_eC}1${ac_eD}
+${ac_dA}HAVE_OPENSSL_H${ac_dB}HAVE_OPENSSL_H${ac_dC}1${ac_dD}
+${ac_uA}HAVE_OPENSSL_H${ac_uB}HAVE_OPENSSL_H${ac_uC}1${ac_uD}
+${ac_eA}HAVE_OPENSSL_H${ac_eB}HAVE_OPENSSL_H${ac_eC}1${ac_eD}
 ${ac_dA}STDLIB_MALLOC${ac_dB}STDLIB_MALLOC${ac_dC}1${ac_dD}
 ${ac_uA}STDLIB_MALLOC${ac_uB}STDLIB_MALLOC${ac_uC}1${ac_uD}
 ${ac_eA}STDLIB_MALLOC${ac_eB}STDLIB_MALLOC${ac_eC}1${ac_eD}
