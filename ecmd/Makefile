@@ -24,10 +24,10 @@
 ### Author: tobbe@eddieware.org
 ### Contributor(s): 
 ###
-### $Id: Makefile,v 1.1 2000/10/27 22:20:24 dredd Exp $ 
+### $Id: Makefile,v 1.2 2000/12/15 22:33:14 dredd Exp $ 
 ### $Source: /cvsroot/eddie/eddie/ecmd/Makefile,v $ 
-### $Revision: 1.1 $ 
-### $Date: 2000/10/27 22:20:24 $ 
+### $Revision: 1.2 $ 
+### $Date: 2000/12/15 22:33:14 $ 
 ### $State: Exp $ 
 ### --------------------------------------------------------------------
 
@@ -36,11 +36,12 @@ EDDIE_ROOT=..
 
 include $(EDDIE_ROOT)/eddie.mk
 include $(EDDIE_ROOT)/vsn.mk
+include $(EDDIE_ROOT)/system/system.mk
 
 ifeq ($(TARGET_OS),bsd)
-   LIBS      = -lerl_interface -lei
+   LIBS      = -L/usr/local/lib/erlang/lib/erl_interface-$(ERL_INTERFACE_VSN)/lib -lerl_interface -lei 
 else
-   LIBS      = -L/usr/local/lib/erlang/lib/erl_interface-3.2.3/lib -lerl_interface -lei -lresolv 
+   LIBS      = -L/usr/local/lib/erlang/lib/erl_interface-$(ERL_INTERFACE_VSN)/lib -lerl_interface -lei -lresolv 
 endif
 
 ifeq ($(findstring cygwin,$(TARGET_OS)),cygwin)
