@@ -1,0 +1,662 @@
+#!/bin/sh
+
+### --------------------------------------------------------------------
+### The contents of this file are subject to the Erlang Public License
+### License, Version 1.0, (the "License"); you may not use this file
+### except in compliance with the License. You may obtain a copy of the
+### License at http://www.eddieware.org/EPL
+###
+### Software distributed under the License is distributed on an "AS IS"
+### basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+### the License for the specific language governing rights and limitations
+### under the License.
+###
+### The Original Code is Eddie-0.83b1.
+###
+### The Initial Developer of the Original Code is Ericsson Telecom
+### AB. Portions created by Ericsson are Copyright (C), 1998,1999 Ericsson
+### Telecom AB. All Rights Reserved.
+###
+### Contributor(s): geoff@eddieware.org
+###
+### May 99 - geoff@eddieware.org - 
+###    Consolidated individual scripts
+###	   into a single eddie frontend script.
+###
+### $Id: eddie.src,v 1.1 2000/10/27 22:20:26 dredd Exp $ 
+### $Source: /cvsroot/eddie/eddie/oam/src/eddie.src,v $ 
+### $Revision: 1.1 $ 
+### $Date: 2000/10/27 22:20:26 $ 
+### $State: Exp $ 
+###
+### FIX: need to check "remote" flag so we don't get into infinite
+###     recursion on rsh'ing.
+### --------------------------------------------------------------------
+
+USAGE="Usage: `basename $0` Command [-p Path] [-vn] -c Cookie -d Directory Node
+
+Commands:
+
+init   -  Initialise an Eddie node
+config -  Configure an Eddie cluster
+start  -  Start an Eddie node
+stop   -  Stop an Eddie node
+status -  Get some runtime information about an Eddie node.
+add    -  Add an Eddie node to a running system
+delete -  Delete an Eddie node from a running system.
+load   -  Start an Eddie load information node only (for LBDNS only setup).
+
+Flags:
+
+    -c Specify Cookie to be used
+    -d Specify the Mnesia database Directory to be used.
+    -v Verbose ouput. Run in foreground.
+    -m Migration configuration file (config command only)
+    -g Gateway configuration file (config command only)
+    -p Add a Path to your call-back modules. *Always* add
+       $EDDIE_ROOT/examples to the path. It does not hurt!
+    -n Start a dummy Eddie node, i.e. to be used prior to the eadd and
+       edelete commands if no appropriate node is running.
+
+Version: %EDDIE_VSN%
+    
+Note: If Node is running it will be stopped.
+Note: If Node refers to a remote machine the ssh/rsh command will be used."
+
+# No default values anymore (too confusing) 
+myname=$0
+command=$1
+allargs=$*
+verbose=false
+remote=false
+cookie=
+dir=
+verbflag=
+
+if [ $# -lt 4 ]
+then
+	    printf "Insufficient args - %s\n" "$USAGE"
+	    exit 3
+fi 
+
+shift `expr $OPTIND`
+
+while getopts :d:g:m:c:rvnhp: c
+do
+    case $c in
+	c)
+	    cookie="$OPTARG";;
+	d)
+	    dir="$OPTARG";;
+    g)
+        arthur_config="$OPTARG";;
+    m)
+        prefect_config="$OPTARG";;
+	p)
+	    path="$OPTARG $path";;
+    r)
+        remote=true;;
+	v)
+   	    verbflag=-v
+	    verbose=true;;
+	n)
+	    dummy=true;;
+    h)
+	    printf "Help - %s\n" "$USAGE"
+	    exit 0;;
+	\?)
+	    printf "Options - %s\n" "$USAGE"
+	    exit 2;;
+    esac
+done
+
+ERL_CALL="%ERL_CALL%"
+ERL_ROOT=%ERL_ROOT%
+EDDIE_ROOT=%ROOTDIR%
+EDDIE_LIB=$EDDIE_ROOT/lib
+BOOT_OPTS="%BOOT_OPTS%"
+LOADINFO_BOOT="%LOADINFO_BOOT%"
+ERL_OPTS="%ERL_OPTS%"
+EDDIE_RSH="%EDDIE_RSH%"
+SBINDIR="%SBINDIR%"
+
+HEART_COMMAND="$SBINDIR/sbin/eddie start ${1+$@}"
+export HEART_COMMAND
+
+shift `expr $OPTIND - 1`
+#echo $#
+
+# set up the descriptor limit (only on sunos5).
+%LIMIT%
+
+#
+# Setup some path stuff (in case we supply it properly)
+# At start of path so we don't run someone else's naughty scripts..
+# (although you shouldn't be running this as root anyway!)
+#
+
+PATH=$EDDIE_ROOT/bin:$ERL_ROOT/bin:$SBINDIR:$PATH
+export PATH
+
+#
+# Lots of anal retentive checks. 
+#
+
+if [ -z "$cookie" ]; then
+    echo "ERROR(`basename $0`): Must specify a cookie (use the -c switch) !"
+    exit 1
+fi
+
+if [ -z "$dir" ]; then
+    echo "ERROR(`basename $0`): Must specify a Mnesia directory (use the -d switch) !"
+    exit 1
+fi
+
+if [ ! -d $dir ]
+then
+  echo "ERROR(`basename $0`): $dir does not exist"
+  exit 1
+fi
+
+if [ ! -r $dir ]
+then
+  echo "ERROR(`basename $0`): no read permission to $dir"
+  exit 1
+fi
+
+if [ $# -lt 1 ]; then
+    printf "Args - %s\n" "$USAGE"
+    exit 2
+fi
+
+#name=`echo $1|sed -e "s/@[^@]*$//"`
+#host=`echo $1|sed -e "s/^[^@]*@//"`
+#hostn=`hostname`
+#hostn=`echo $hostn | cut -f1 -d.`
+
+#
+# Name: stop nodes
+# Purpose: stop a bunch of Erlang nodes
+#
+
+stop_nodes() 
+{
+  for node in $*; do
+    $ERL_CALL -sname $node -c $cookie -a "init stop" > /dev/null 2>&1
+    verbage $verbose "Node: $node stopped !"
+  done
+}
+
+call() 
+{
+    result=`$ERL_CALL -sname $1 -c $cookie -a "$2" 2>&1`
+
+    if [ "$result" != $3 ]; then
+      printf "%s: %s (%s)\n" "$1" "$result" "$2"
+      shift 3
+      stop_nodes $*
+      exit 2
+    fi
+}
+
+verbage()
+{
+    if [ $1 = true ]; then
+	    echo $2
+	fi	
+}
+
+
+#
+# Name: init
+# Purpose: initialise Mnesia database tables in preparation
+#   for installing Eddie data and running Eddie.
+#
+
+init()
+{
+    cookie=$1
+    mnesia_dir=$2
+    node=$3
+
+    name=`echo $node|sed -e "s/@[^@]*$//"`
+    host=`echo $node|sed -e "s/^[^@]*@//"`
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+
+    $ERL_CALL -sname $node -c $cookie -a "erlang halt" > /dev/null 2>&1
+
+    if [ $remote = true ] || [ $host = $hostn ]; then
+	    if [ "$verbose" = "true" ]; then
+		    erl $ERL_OPTS -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$name@$host%QUOTE% &
+	    else
+		    erl $ERL_OPTS -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$name@$host%QUOTE% -detached
+	    fi
+	else
+        $EDDIE_RSH $host $myname init -c $cookie -d $mnesia_dir $verbflag -r $node
+	fi 
+
+    sleep 2
+
+	result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+	while [ "$result" != yes ]; do
+	    result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+	    if [ "$verbose" = "true" ]; then
+		echo $node: $result
+	    fi
+
+	    sleep 2
+	done
+
+    verbage $verbose "$node: ok"
+}
+
+#
+# Name: start
+# Purpose: actually activate an Eddie node (frontend or backend)
+#
+
+start()
+{
+    cookie=$1
+    dir=$2
+    node=$3
+   
+    name=`echo $node|sed -e "s/@[^@]*$//"`
+    host=`echo $node|sed -e "s/^[^@]*@//"`
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+
+    if [ -z "$dummy" ]
+    then
+    ## Start a REAL eddie node !
+
+    rm /tmp/dummy_dets.$1 > /dev/null 2>&1
+    LOG_MF_DIR=$dir/eddie_log.$3
+    mkdir -p $LOG_MF_DIR
+    name=`echo $node|sed -e "s/@[^@]*$//"`
+
+    if [ "$verbose" = "true" ]; then
+	    VERBOSE="-kernel error_logger tty -sasl sasl_error_logger tty"
+	    VERB=true
+    else
+	    VERBOSE=-detached
+	    VERB=false
+    fi
+
+    # If system hasn't terminated within $SHUTDOWN ms during shutdown it will
+    # be brutaly killed.
+    SHUTDOWN=60000
+
+    # erl $BOOT_OPTS $ERL_OPTS -shutdown_time $SHUTDOWN -sname $name -setcookie $cookie -mnesia dir \"$dir/db_$1\" -sasl error_logger_mf_dir \"$LOG_MF_DIR\" -load_info log_dir \"$dir\" verbose $VERB -pz $path -sasl start_prg "\"$HEART_COMMAND\"" $VERBOSE 
+
+    if [ $remote = true ] || [ $host = $hostn ]; then
+        erl $BOOT_OPTS $ERL_OPTS -shutdown_time $SHUTDOWN -sname $name -setcookie $cookie -mnesia dir %QUOTE%$dir/db_$node%QUOTE% -sasl error_logger_mf_dir %QUOTE%$LOG_MF_DIR%QUOTE% -load_info log_dir %QUOTE%$dir%QUOTE% verbose $VERB -pz $path -sasl start_prg %HEART_OPEN_QUOTE%$HEART_COMMAND%HEART_CLOSE_QUOTE% $VERBOSE 
+    else
+        $EDDIE_RSH $host $myname start $verbflag -c $1 -d $2 -r $3
+# in prep for multiple estarts on one line
+# $EDDIE_RSH $host $myname -c $cookie -d $mnesia_dir $verbflag $node
+    fi
+
+    else
+    ## Start a DUMMY eddie node !
+    $ERL_CALL -sname $node -c $cookie -q > /dev/null 2>&1
+
+    if [ $remote = true ] || [ $host = $hostn ]; then
+	    if [ "$verbose" = "true" ]; then
+	        erl $ERL_OPTS -sname $name -setcookie $cookie -mnesia dir %QUOTE%$dir/db_$1%QUOTE% -s mnesia &
+	    else
+	        erl $ERL_OPTS -sname $name -setcookie $cookie -mnesia dir %QUOTE%$dir/db_$1%QUOTE% -s mnesia -detached
+        fi
+    else
+	    if [ "$verbose" = "true" ]; then
+	        $EDDIE_RSH $host erl $ERL_OPTS -sname $name -setcookie $cookie -mnesia dir \'%QUOTE%$dir/db_$node%QUOTE%\' -s mnesia &
+        else
+	        $EDDIE_RSH $host erl $ERL_OPTS -sname $name -setcookie $cookie -mnesia dir \'%QUOTE%$dir/db_$node%QUOTE%\' -s mnesia -detached
+        fi
+    fi
+fi
+}
+
+#
+# Name: stop
+# Purpose: stop Eddie nodes from continued execution.
+#
+
+stop()
+{
+    cookie=$1
+    node=$2
+
+    result=`$ERL_CALL -sname $node -c $cookie -a "oam application [servant]" 2>&1`
+
+    if [ "$result" = true ]; then
+	    $ERL_CALL -sname $node -c $cookie -a "servant_server abort" > /dev/null 2>&1
+    else
+	    $ERL_CALL -sname $node -c $cookie -a "init stop" > /dev/null 2>&1
+    fi
+}
+
+#
+# Name: status
+# Purpose: return the current status of an Eddie node
+#
+
+status()
+{
+    cookie=$1
+    node=$2
+
+    echo Status for: $node
+
+    if [ $arthur_config ]; then
+	result=`$ERL_CALL -sname $node -c $cookie -a "inet_server status" 2>&1`
+	printf "$result"
+    fi
+
+    if [ $prefect_config ]; then
+	result=`$ERL_CALL -sname $node -c $cookie -a "master_server status" 2>&1`
+	printf "$result"
+    fi
+}
+
+#
+# Name: add
+# Purpose: to add an Eddie node to an already executing Eddie cluster
+#
+
+add()
+{
+    cookie=$1
+    mnesia_dir=$2
+    node=$3
+
+    name=`echo $node|sed -e "s/@[^@]*$//"`
+    host=`echo $node|sed -e "s/^[^@]*@//"`
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+
+    $ERL_CALL -sname $node -c $cookie -a "erlang halt" > /dev/null 2>&1
+
+
+    if [ $remote = true ] || [ $host = $hostn ]; then
+	rm -rf $mnesia_dir/db_$node > /dev/null 2>&1
+
+	if [ "$verbose" = "true" ]; then
+	    erl $ERL_OPTS -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$node%QUOTE% -mnesia extra_db_nodes \[$1\] -s mnesia &
+	else
+	    erl $ERL_OPTS -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$node%QUOTE% -mnesia extra_db_nodes \[$1\] -s mnesia -detached
+	fi
+    else
+         $EDDIE_RSH $host $myname add $verbflag -c $1 -d $2 -r $3
+#        $EDDIE_RSH $host $myname -c $cookie -d $mnesia_dir $verbflag $node
+    fi
+
+    sleep 2
+
+    result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+    while [ "$result" != yes ]; do
+	result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+    verbage $verbose "$node: $result"
+
+	sleep 2
+    done
+
+    verbage $verbose "$node: ok"
+
+    result=`$ERL_CALL -sname $1 -c $cookie -a "oam add [$node]" 2>&1`
+    $ERL_CALL -sname $node -c $cookie -a "init stop" > /dev/null 2>&1
+
+    if [ "$result" != ok ]; then
+	echo $1: $result
+	exit 2
+    fi
+}
+
+#
+# Name: delete
+# Purpose: to delete an Eddie node to an already executing Eddie cluster
+#
+
+delete()
+{
+    cookie=$1
+    mnesia_dir=$2
+    node=$3
+
+    name=`echo $node|sed -e "s/@[^@]*$//"`
+    host=`echo $node|sed -e "s/^[^@]*@//"`
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+
+    $ERL_CALL -sname $node -c $cookie -a "erlang halt" > /dev/null 2>&1
+
+    if [ $remote = true ] || [ $host = $hostn ]; then
+	if [ "$verbose" = "true" ]; then
+	    erl $ERL_OPTS -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$node%QUOTE% -s mnesia &
+	else
+	    erl $ERL_OPTS -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$node%QUOTE% -s mnesia -detached
+        fi
+    else
+        $EDDIE_RSH $host $myname delete $verbflag -c $1 -d $2 -r $3
+# For multiple on one line...
+#       $EDDIE_RSH $host $myname -c $cookie -d $mnesia_dir $verbflag $node
+    fi
+
+    sleep 2
+
+    result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+    while [ "$result" != yes ]; do
+	result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+    verbage $verbose "$node: $result"
+
+	sleep 2
+    done
+
+    verbage $verbose "$node: ok"
+
+    result=`$ERL_CALL -sname $1 -c $cookie -a "oam delete [$node]" 2>&1`
+    $ERL_CALL -sname $node -c $cookie -a "init stop" > /dev/null 2>&1
+
+    if [ $remote = true ] || [ $host = $hostn ]; then
+	    rm -rf $mnesia_dir/db_$node > /dev/null 2>&1
+    else
+	    $EDDIE_RSH $host rm -rf $mnesia_dir/db_$node > /dev/null 2>&1
+    fi
+
+    if [ "$result" != ok ]; then
+	echo $1: $result
+	exit 2
+    fi
+
+}
+
+#
+# Name: config
+# Purpose: to configure an Eddie installation; sets up the database
+#   to have the cluster arrangements and appropriate port numbers
+#   available to each Eddie node. If done while Eddie is executing
+#   the Eddie nodes should respond by modifying their setup.
+#
+
+config()
+{
+    cookie=$1
+    mnesia_dir=$2
+    node=$3
+    arthur_config=$4 
+    prefect_config=$5
+
+    started=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+    if [ "$started" != yes ]; then
+	    name=`echo $node|sed -e "s/@[^@]*$//"`
+	    host=`echo $node|sed -e "s/^[^@]*@//"`
+	    hostn=`hostname`
+	    hostn=`echo $hostn | cut -f1 -d.`
+
+	    if [ $remote = true ] || [ $host = $hostn ]; then
+	        if [ "$verbose" = "true" ]; then
+		        erl $ERL_OPTS -s  -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$node%QUOTE% -s mnesia &
+	        else
+		        erl $ERL_OPTS -s  -s file eval $EDDIE_ROOT/bin/.eddie_path -sname $name -setcookie $cookie -mnesia dir %QUOTE%$mnesia_dir/db_$node%QUOTE% -s mnesia -detached
+            fi
+	    else
+		    $EDDIE_RSH $host $myname config -c $cookie -d $mnesia_dir -m $prefect_config -g $arthur_config -r $node
+	    fi
+
+	    sleep 2
+
+	    result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+	    while [ "$result" != yes ]; do
+	        result=`$ERL_CALL -sname $node -c $cookie -a "oam started" 2>&1`
+
+            verbage $verbose "$node: $result"
+
+	        sleep 2
+	    done
+
+        verbage $verbose "$node: ok"
+    fi
+
+    if [ $arthur_config ]; then
+        verbage $verbose "Parse the $arthur_config file and store it in the database..."
+	    result=`$ERL_CALL -sname $node -c $cookie -a "inet_server load [%DB_QUOTE%$arthur_config%DB_QUOTE%]"`
+	
+	    if [ "$result" != ok ]; then
+	        echo $result
+	    fi
+    fi
+
+    if [ $prefect_config ]; then
+	    verbage $verbose "Parse the $prefect_config file and store it in the database..."
+	fi	
+	result=`$ERL_CALL -sname $node -c $cookie -a "servant_config load [%DB_QUOTE%$prefect_config%DB_QUOTE%]"`
+
+	if [ "$result" != ok ]; then
+	    echo $result
+	fi
+
+    if [ "$started" != yes ]; then
+        verbage $verbose "Stop node $node gracefully..."
+	    $ERL_CALL -sname $node -c $cookie -a "init stop" > /dev/null 2>&1
+    fi
+
+    verbage $verbose "`basename $0` config: Finished."
+}
+
+#
+# Name: loadinfo
+# Purpose: to start a standalone load information node for an Eddie
+#   Load balancing DNS (without a gateway) setup.
+#
+
+loadinfo()
+{
+    cookie=$1
+    mnesia_dir=$2
+    node=$3
+    prefect_config=$4
+
+    verbage $verbose "Starting standalone load information nodes."
+
+    name=`echo $node|sed -e "s/@[^@]*$//"`
+    host=`echo $node|sed -e "s/^[^@]*@//"`
+    hostn=`hostname`
+    hostn=`echo $hostn | cut -f1 -d.`
+
+    # Start up a dummy node (to read in required BE name)
+    erl $LOADINFO_BOOT $ERL_OPTS -sname zzz@$hostn -setcookie $cookie -pz $path -detached
+    # Wait a bit to make sure the startup is good.
+    sleep 2
+
+    # Now query the backend name (from sucked-in config)
+    BEname=`$ERL_CALL -s -c $cookie -sname zzz@$hostn -a "lonelb sw_backend [%QUOTE%$prefect_config%QUOTE%, %QUOTE%$hostn%QUOTE%]"`
+    # Terminate dummy node
+    $ERL_CALL -c $cookie -sname zzz -q
+
+    # Check return value
+    if [ $BEname = badconfig ]; then
+        echo Failed to configure load information node - check config file.
+        echo Unable to start standalone load information server.
+        echo NB: Standalone servers should be started with a local config file
+        echo on the local node.
+        exit 1
+    fi
+
+    if [ $remote = true ] || [ $host = $hostn ]; then
+        # Now start the backend node
+        erl $LOADINFO_BOOT $ERL_OPTS -sname $BEname -setcookie $cookie -pz $path -detached
+    else
+	    $EDDIE_RSH $host $myname load -c $cookie -d $mnesia_dir -m $prefect_config -r $node
+    fi
+
+}
+
+#
+# The main command interpreter.
+# Actually perform the appropriate command in prior functions
+#
+
+#echo -n "Command = " 
+#echo $command
+#echo $#
+
+if [ $# -ge 1 ]; then
+
+# Start stuff
+	for node in $@
+	do
+        case $command in
+        config)
+            config $cookie $dir $node $arthur_config $prefect_config;;
+        init)
+            init $cookie $dir $node;;
+        start)
+            start $cookie $dir $node;;
+        status)
+            status $cookie $node;;
+        stop)
+            stop $cookie $node;;
+        add)
+            add $cookie $dir $node;;
+        delete)
+            delete $cookie $dir $node;;
+        load)
+            loadinfo $cookie $dir $node $prefect_config;;
+        *)
+	        printf "%s\n" "$USAGE"
+	        exit 2;;
+        esac
+    done
+
+# Clean up if necessary
+    if [ $remote = true ]; then
+        exit 0
+    fi
+
+	case $command in
+	init)
+        verbage $verbose "Re-creating new schemas, and starting Mnesia on all nodes..."
+    	call $node "oam schema [[$*]]" ok $*
+
+        verbage $verbose "Creating mandatory inet_server tables..."
+    	call $node "inet_server create_tables [[$*]]" ok $*
+
+        verbage $verbose "Creating servant tables..."
+    	call $node "servant_config create_tables [[$*]]" ok $*
+
+        verbage $verbose "Stopping all nodes..."
+
+    	stop_nodes $*
+        verbage $verbose echo "`basename $0` init: Finished !"
+	esac
+fi
+

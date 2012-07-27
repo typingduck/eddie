@@ -1,0 +1,10 @@
+EMULATOR=jam
+
+all:
+	cd lib/dns_server;$(MAKE) EMULATOR=$(EMULATOR)
+	cd lib/misc;$(MAKE) EMULATOR=$(EMULATOR)
+
+clean:
+	cd lib/dns_server;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd lib/misc;$(MAKE) EMULATOR=$(EMULATOR) clean
+

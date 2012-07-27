@@ -1,0 +1,96 @@
+README.NOW
+
+Author:  Jon Holdsworth  jon@central.warehouse.net
+Updated: Tue Jul 18 10:09:59 EST 2000
+
+
+
+
+Starting Quickly
+----------------
+
+To understand how to build and package Eddie under Solaris,
+you must read the file:
+
+	build.scripts.txt
+
+
+
+Contents In Detail
+------------------
+
+This directory contains the following files:
+
+
+How to use Solaris packages to install Eddie.
+
+	INSTALL.solaris                         	
+
+
+
+Vital component files for constructing the Eddie package.
+
+	eddie-pkginfo
+	eddie-depend
+	eddie-request
+	eddie-postinstall
+
+
+
+The boot scripts for Eddie and lbdns - these get processed
+and prepared by the Eddie package as it is installed.
+
+	eddie.init.solaris.src
+	lbdns.init.solaris.src                  
+
+
+
+Two scripts that place and activate (and also can remove and
+deactivate) the Eddie and lbdns boot scripts for automatic
+boot at system boot.
+
+	eddie.setboot
+	lbdns.setboot                           
+
+
+
+A description of how to use the build scripts.  The only build
+script present here is the one to build and package Eddie.
+This describes the minor changes you need to make to the script
+to customise it before running it.
+
+	build.scripts.txt                       
+
+
+
+How to build and package Erlang and Eddie manually, ie. "The
+hard way".
+
+	build.and.pkg.erlang49.on.sun.txt       
+	build.and.pkg.eddie.on.sun.txt      
+
+
+
+
+The script that builds and packages Eddie ready for Solaris
+installation.  A couple of minor changes need to be made to this
+script before running it, as detailed in build.scripts.txt, and
+also you need to have a checked out ready-to-compile version of
+Eddie ready to go.
+
+	eddie-build-and-pkg.sh              
+
+
+
+
+A list of helpful websites, including analyses of Solaris packages,
+location of vital GNU utilities such as gmake and gcc, and other
+useful stuff.
+
+	reference.websites.txt
+
+
+
+
+
+[end of document]

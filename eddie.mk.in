@@ -1,0 +1,88 @@
+MAKE=@MAKE@
+VPATH=../src:../priv
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+libdir = @libdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+
+PRODUCT_NAME=eddie
+PRODUCT_CNAME=Eddie
+
+EDDIE_ROOT=@EDDIE_ROOT@
+EDDIE_USER=@EDDIE_USER@
+INSTALL_ROOT=@libdir@/$(PRODUCT_NAME)
+INSTALL_LIB=$(INSTALL_ROOT)/lib/
+EMULATOR=@EMULATOR@
+ERLDIR=@ERLDIR@
+TARGET_OS=@TARGET_OS@
+EXE=@EXE@
+
+EDDIE_VARS = 'EDDIE_ROOT=$(EDDIE_ROOT)' 
+
+include $(EDDIE_ROOT)/system/system.mk
+
+CC=@CC@
+CPPFLAGS=@CPPFLAGS@ 
+LDFLAGS=@LDFLAGS@ @LIBS@
+LIBS=@LIBS@ -L$(ERLDIR)/lib/erl_interface-$(ERL_INTERFACE_VSN)/lib 
+CFLAGS=@CFLAGS@ \
+	-I$(ERLDIR)/usr/include \
+	-I$(ERLDIR)/lib/erl_interface-$(ERL_INTERFACE_VSN)/include \
+	-I$(EDDIE_ROOT)      # To find config.h
+
+PREFIX=@prefix@
+HOST=@host@
+EXEC_PREFIX=@exec_prefix@
+BINDIR=@bindir@
+LOGDIR=@LOGDIR@
+INSTALL_DOC=$(INSTALL_ROOT)/@INSTALL_DOC@/
+
+LIMIT=@LIMIT@
+CPU_SUP=@CPU_SUP@
+WHOAMI=@WHOAMI@
+
+
+ERL=@ERL@
+ERLC=@ERLC@
+ERL_FLAGS =
+ERL_COMPILE_FLAGS = -W -I$(ERLDIR)/lib/mnemosyne-$(MNEMOSYNE_VSN)/ebin \
+	-I$(EDDIE_ROOT)/misc/include \
+	-I$(EDDIE_ROOT)/servant/include \
+	-I$(EDDIE_ROOT)/inet_server/src \
+	-I$(EDDIE_ROOT)/load_info/src \
+	-pa $(EDDIE_ROOT)/misc \
+	-pa $(EDDIE_ROOT)/servant 
+
+EDDIE_RELDIR = $(EDDIE_ROOT)/releases/eddie-$(EDDIE_VSN)/lib
+
+EDDIE_RSH=@EDDIE_RSH@
+ERL_CALL=$(INSTALL_ROOT)/bin/@ERL_CALL@
+
+QUOTE=@QUOTE@
+DB_QUOTE=@DB_QUOTE@
+HEART_OPEN_QUOTE=@HEART_OPEN_QUOTE@
+HEART_CLOSE_QUOTE=@HEART_CLOSE_QUOTE@
+
+EBIN = ../ebin
+ESRC = .
+
+.SUFFIXES: .erl .jam .beam .yrl .xrl .bin .mib .hrl .sgml .html .ps .3 .1 .fig .dvi .tex .class .java .pdf
+
+$(EBIN)/%.jam: $(ESRC)/%.erl
+	$(ERLC) -bjam $(ERL_FLAGS) $(ERL_COMPILE_FLAGS) -o$(EBIN) $<
+
+$(EBIN)/%.beam: $(ESRC)/%.erl
+	$(ERLC) -bbeam $(ERL_FLAGS) $(ERL_COMPILE_FLAGS) -o$(EBIN) $<
+
+.erl.jam:
+	$(ERLC) -bjam $(ERL_FLAGS) $(ERL_COMPILE_FLAGS) -o$(dir $@) $<
+
+.erl.beam:
+	$(ERLC) -bbeam $(ERL_FLAGS) $(ERL_COMPILE_FLAGS) -o$(dir $@) $<
+
+

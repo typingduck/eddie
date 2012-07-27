@@ -1,0 +1,223 @@
+Installing Eddie under Solaris
+----------------------------------
+
+Authors: Jon Holdsworth, Magnus Stenmann
+Updated: 18/07/2000
+
+
+Uncompressing downloaded (gzipped) packages:
+--------------------------------------------
+
+If you downloaded the packages from the Internet,
+you need to uncompress them before installing.
+
+The files are compressed with the GNU 'gzip' program.
+
+To extract a gzipped file, do the following:
+
+gunzip filename.pkg.gz
+
+or
+
+cat /path/filename.pkg.gz | gunzip  > /path/filename.pkg
+
+
+Installing packages from CD:
+----------------------------
+
+If the CD does not automatically mount within a
+few seconds, you need to mount the CD manually,
+usually by issuing something like:
+
+volcheck -v
+
+You can install the packages from the CD, or copy them
+to a hard drive.
+
+
+Installing the packages:
+------------------------
+
+The following 2 packages need to be installed:
+
+File                                        Product             Instance name
+----                                        -------             -------------
+erlang-4.9.1-R6B-R.sparc-sun-solaris2.7.pkg Erlang 4.9.1 R6B R  erlang491
+eddie-1.X.Y-R.sparc-sun-solaris2.7.pkg  Eddie 1.X.Y-R   eddie1XY
+
+where:
+X = Eddie Minor Version number
+Y = Eddie Change number
+
+R = Revision number
+    (Erlang and Eddie each have their own independant Revision number)
+
+
+These are Sun packages stored in their 'streamed' format,
+which is similar to a tar file but unique to Sun.
+It is not natively compressed, and if compressed will need
+to be uncompressed before the Sun package utility programs
+can read it.
+
+You must be root to install a Sun package.
+
+
+For Eddie to work, Erlang must be installed first!
+
+
+To initiate an installation, as root issue the following
+command:
+
+pkgadd -d <package file>
+
+eg.
+
+pkgadd -d erlang-4.9.1-R6B-R.sparc-sun-solaris2.7.pkg
+
+
+You will see something like the following text:
+
+
+   The following packages are available:
+     1  erlang491     Erlang (Ericsson Erlang Computer Language)
+                     (sparc) V 4.9.1 R6B R
+
+   Select package(s) you wish to process (or 'all' to process
+   all packages). (default: all) [?,??,q]: 
+
+
+Enter '1' and press Return to inititate the install,
+then answer 'yes' or just 'y' to every question.
+
+Pkgadd will terminate with a success or failure message
+at the end of the list of files it is installing.
+
+
+You must first install:
+
+	Erlang 4.9.1 R
+	(erlang491)
+
+and then secondly install:
+
+	Eddie 1.X.Y R
+	(eddie1XY)
+
+
+
+Finishing the installation:
+---------------------------
+
+Create the Eddie runtime user
+---------------------------------
+
+Eddie runs as an unprivileged user, default user name
+is "eddie".
+
+This user must be created, and be a member of the group "daemon"
+The user does not have to have a valid password, or a login shell.
+
+Add the Eddie user by issuing (as root):
+
+useradd -g daemon eddie
+
+which also adds the Eddie user to group "daemon" .
+
+You can then test how this went by issuing the command:
+
+groups eddie
+
+
+
+Add eddie to the init process
+---------------------------------
+
+To do this, go to the directory /usr/local/lib/eddie/doc
+and as root issue the following command:
+
+  ./eddie.setboot on
+
+To remove eddie from the boot process again, issue:
+
+  ./eddie.setboot off
+
+
+There is a similar script to add lbdns to the boot process
+(should only be done on one of the machines if at all), called
+
+ lbdns.setboot
+
+which works the same way as eddie.setboot
+
+
+
+The following commands are essential
+-------------------------------------
+
+pkginfo
+-------
+
+This gives you information about a package.
+If it is an uninstalled package, you can enter:
+
+pkginfo -d <package file> -l
+
+to get extensive info about the package.
+
+The '-l' option is not essential, but gives
+more useful verbosity.
+
+If a package is already installed, you can
+enter:
+
+pkginfo -l <package instance>
+
+to get information about that installed package.
+The '-l' option works the same here too.
+
+To find out the <package instance> names of all
+packages installed on the system, just enter:
+
+pkginfo
+
+on its own.
+
+There is often a pause while the package database is
+consulted, then you will see a long list (which can
+be captured by a utility like 'more' or 'less') of package
+instance names.
+
+
+pkgrm
+-----
+
+This removes a given package instance:
+
+pkgrm <package instance>
+
+Answer 'yes' or 'y' to all questions.
+
+
+
+References:
+-----------
+
+Sun/Solaris Packaging How-To
+http://docs.sun.com/ab2/coll.45.13/PACKINSTALL/
+
+GNU
+http://www.gnu.org
+
+Solaris packages (including GNU ones)
+http://metalab.unc.edu/pub/packages/solaris/sparc/
+http://us-mirror.www.ainet.net/pub/direct/solaris/sparc/
+
+Erlang
+http://www.erlang.org
+
+
+
+
+
+
+End of document

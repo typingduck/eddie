@@ -1,0 +1,142 @@
+#!/bin/sh
+#
+# $Id $
+# Apr 99 - geoff@eddieware.org - Minor fixes 
+#
+USAGE="Usage: $0 [-b Boot-file] [-p Port] [-l ConfigFile] [-i Directory] 
+                 [-d Level] [-rv]
+
+-b
+    Use an alternative DNS Boot-file (default: /etc/named.boot).
+-p
+    Use an alternative Port (default: 53).
+-l
+    Use a ConfigFile to setup the load-balancing.
+-i
+    Use an alternative log Directory (default: /var/tmp).
+-r
+    Restart DNS server automatically if terminated. Avoid this flag
+    until you have a stable configuration!
+-v
+    Verbose output. Inhibit -r and run in foreground.
+-d
+    Debug Level:
+	1: Verbose output (same as -v).
+	2: Debug output (internal reports (incl. verbose)).
+    Inhibit -r and run in foreground."
+
+ERL_ROOT=%ERL_ROOT%
+DNS_ROOT=%ROOTDIR%
+SBINDIR=%SBINDIR%
+DNS_BOOT="%DNS_BOOT%"
+SBINDIR="%SBINDIR%"
+DNS_LIB=$DNS_ROOT/lib
+
+bootfile=/etc/named.boot
+port=53
+l_dir=/var/tmp
+heart=
+debug=
+
+while getopts :b:p:l:i:d:rv c
+do
+    case $c in
+	b)
+	    bootfile=$OPTARG;;
+	p)
+	    port=$OPTARG;;
+    l)
+	    lb_bootfile=$OPTARG
+	    lb_boot="lb_boot \"$OPTARG\"";;
+    i)
+	    l_dir=$OPTARG;;
+	r)
+	    heart=-heart;;
+	v)
+	    verbose=true;;
+	d)
+	    debug=$OPTARG
+	    verbose=true;;
+        \?)
+	    printf "%s\n" "$USAGE"
+	    exit 2;;
+    esac
+done
+
+if [ ! -d $l_dir ]
+then
+  echo "$0: $l_dir does not exist"
+  exit 1
+fi
+
+# For some reason Cygwin does not report this correctly
+#if [ ! -w $l_dir ]
+#then
+#  echo "$0: no write permission to $l_dir"
+#  exit 1
+#fi
+
+if [ ! -r $l_dir ]
+then
+  echo "$0: no read permission to $l_dir"
+  exit 1
+fi
+
+log_dir=$l_dir/dns_log
+
+mkdir -p $log_dir
+
+if [ ! -r $bootfile ]
+then
+  echo "$0: can not read $bootfile"
+  exit 1
+fi
+
+if [ -n "$lb_bootfile" ]
+then
+  if [ ! -r $lb_bootfile ]
+  then
+    echo "$0: can not read $lb_bootfile"
+    exit 1
+  fi
+fi
+
+HEART_COMMAND="$SBINDIR/lbdns ${1+"$@"}"
+export HEART_COMMAND
+
+shift `expr $OPTIND - 1`
+
+if [ -z "$RELDIR" ]
+then
+   RELDIR=$DNS_ROOT/releases
+fi
+
+## If the release_handler is used (and a new release is dynamically
+## being installed) $1 contains an alternative start_erl.data here.
+## TBD, if $1 exists, the last arg of HEART_COMMAND should be deleted !
+START_ERL_DATA=${1:-$RELDIR/start_erl.data}
+
+if [ -z "$verbose" ]
+then
+  VERBOSE=-detached
+  VERB=false
+else
+  if [ "2" = "$debug" ]
+  then
+    VERBOSE="-kernel error_logger tty -sasl sasl_error_logger tty"
+  else
+    VERBOSE=
+  fi
+  VERB=true
+  heart=
+fi
+
+cd $log_dir
+
+# If system hasn't terminated within $SHUTDOWN ms during shutdown it will
+# be brutaly killed.
+SHUTDOWN=30000
+
+# Actually start it up.
+erl $DNS_BOOT +B -noinput -noshell -shutdown_time $SHUTDOWN $heart -dns_server boot %QUOTE%$bootfile%QUOTE% port $port $lb_boot log_dir %QUOTE%$log_dir%QUOTE% verbose $VERB -sasl error_logger_mf_dir %QUOTE%$log_dir%QUOTE% -sasl start_prg %HEART_OPEN_QUOTE%$HEART_COMMAND%HEART_CLOSE_QUOTE% $VERBOSE -boot_var DNS_ROOT $DNS_LIB
+

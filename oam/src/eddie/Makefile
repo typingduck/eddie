@@ -1,0 +1,34 @@
+# New ports collection makefile for:   eddie
+# Version required:    1.3.3
+# Date created:        28 October 1999
+# Whom:                dwyer@eddieware.org
+#
+# $FreeBSD$
+#
+       
+DISTNAME=      eddie-1.3.3
+CATEGORIES=    www
+MASTER_SITES=  http://www.eddieware.org/release/
+       
+MAINTAINER=    dwyer@eddieware.org
+       
+USE_GMAKE=     yes
+
+GNU_CONFIGURE=  yes
+
+BUILD_DEPENDS= erlc:${PORTSDIR}/lang/erlang
+
+RUN_DEPENDS= erl:${PORTSDIR}/lang/erlang
+
+create-plist:
+	touch pkg/PLIST
+	mkdir /usr/tmp/${DISTNAME}
+	mtree -U -f /etc/mtree/BSD.local.dist -d -e -p /usr/tmp/${DISTNAME}
+	make depends PREFIX=/usr/tmp/${DISTNAME}
+	(cd /usr/tmp/${DISTNAME} && find * -type d) > pkg/OLD-DIRS
+	make install PREFIX=/usr/tmp/${DISTNAME}
+	(cd /usr/tmp/${DISTNAME} && find * \! -type d) > pkg/PLIST
+	(cd /usr/tmp/${DISTNAME} && find * -type d) | comm -13 pkg/OLD-DIRS - | sed -e 's#^#@dirrm #' | sort -r >> pkg/PLIST
+	rm pkg/OLD-DIRS
+
+.include <bsd.port.mk>

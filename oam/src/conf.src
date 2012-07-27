@@ -1,0 +1,60 @@
+
+#
+# Basic %PRODUCT_CNAME% Configuration
+#
+# Nodes/clusters should be configured in the %PRODUCT_NAME%.mig file
+# Gateway/admission control should be configured in the %PRODUCT_NAME%.gate file
+#
+# Version: %VERSION%
+#
+
+
+#
+# Cookie to use within the cluster
+# Note: two clusters on the same machine(s) using the same 
+#  cookie will create serious problems!
+#
+
+Cookie=c%RANDOM%
+
+
+#
+# Specify where the Mnesia database should be located
+#
+
+
+MnesiaDirectory=/var/tmp
+
+
+#
+# The name of the user who will be running %PRODUCT_NAME%.
+#
+
+RuntimeUser=%PRODUCT_NAME%
+
+
+#
+# Run in Enhanced DNS mode only?
+# Values: true or false
+#
+
+DNSonly=false
+
+
+##
+## Probably don't change the following
+##
+
+#
+# The location of the Cluster
+#
+
+ClusterConfig=%SYSCONFDIR%/%PRODUCT_NAME%.mig
+
+#
+#
+#
+
+GatewayConfig=%SYSCONFDIR%/%PRODUCT_NAME%.gate
+
+

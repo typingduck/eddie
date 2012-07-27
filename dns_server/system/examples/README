@@ -1,0 +1,28 @@
+This directory includes the configuration files used in the DNS server
+tutorial $DNS_ROOT/doc/tutorial.{pdf,ps,txt}.
+
+In order to use this configuration you have to edit the directory
+directive in the named.boot file. This directive *must* refer to
+$DNS_ROOT/examples.
+
+The files (except lb_dns.boot) are standard BIND configuration files.
+
+named.boot
+	The DNS boot file states that this DNS server should have
+	three primary zones. It also specifies that the cache file
+	contains information about the root name servers. The DNS
+	server supports the following directives: directory, primary,
+	secondary, cache, forwarders, include, options and xfrnets.
+bistromath.se
+128.30.172.in-addr.arpa
+127.in-addr.arpa
+	The zone master files specifying the domain names that exists
+	per zone. 
+cache
+	Contains information about the root name servers. This file is
+	only a dummy file, i.e. you *must* to create your own. 
+lb_dns.boot
+	This is the load balancing boot file specifying the domains
+	to be load balanced using load information. See comments in
+	the config file and/or read the tutorial for a thorough
+	explanation.

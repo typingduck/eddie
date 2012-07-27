@@ -1,0 +1,78 @@
+#----------------------------------------------------------------------
+# File    : ex4.mig
+# Author  : Michael Rumsewicz (mpr@eddieware.org)
+# Purpose : A configuration file with one front end on europa,
+#           one front end on evita, one back end on eva, and one
+#           back end on erika.
+#----------------------------------------------------------------------
+
+DNSServer eddieware.serc.rmit.edu.au 4567
+
+<Node eddieFE@europa>
+  Interfaces eth0
+  LoadThreshold 0.8 2.0
+</Node>
+
+<Node eddieFE@evita>
+  Interfaces eth0
+  LoadThreshold 0.8 2.0
+</Node>
+
+<Node eddieBE@eva>
+  Interfaces eth0
+  LoadThreshold 0.8 3.0
+</Node>
+
+<Node eddieBE@erika>
+  Interfaces eth0
+  LoadThreshold 0.8 3.0
+</Node>
+
+Netmask 255.255.255.255
+
+<Cluster www0101.serc.rmit.edu.au>
+  ClusterType Frontend
+
+  FailoverNodes eddieFE@europa eddieFE@evita
+  BackendClusters backend0101.serc.rmit.edu.au
+
+  <Server eddieFE@europa>
+    AutoConfig On
+    Interface eth0
+    IPAddress 10.170.42.164
+    Port 80
+    Start generic module eddie start @IPAddress @Port http
+    Stop generic module eddie stop @IPAddress @Port http
+  </Server>
+
+  <Server eddieFE@evita>
+    AutoConfig On
+    Interface eth0
+    IPAddress 10.170.42.173
+    Port 80
+    Start generic module eddie start @IPAddress @Port http
+    Stop generic module eddie stop @IPAddress @Port http
+  </Server>
+</Cluster>
+
+<Cluster backend0101.serc.rmit.edu.au>
+  ClusterType Backend
+
+  <Server eddieBE@eva>
+    AutoConfig Off
+    IPAddress 10.170.42.171
+    Port 8001
+    Start generic exec /usr/local/lib/eddie/bin/start_httpd @IPAddress @Port /usr/sbin/httpd /usr/local/lib/eddie/conf
+    Stop generic exec /usr/local/lib/eddie/bin/stop_httpd @IPAddress @Port
+
+  </Server>
+
+  <Server eddieBE@erika>
+    AutoConfig Off
+    IPAddress 10.170.42.170
+    Port 8001
+    Start generic exec /usr/local/lib/eddie/bin/start_httpd @IPAddress @Port /usr/sbin/httpd /usr/local/lib/eddie/conf
+    Stop generic exec /usr/local/lib/eddie/bin/stop_httpd @IPAddress @Port
+
+  </Server>
+</Cluster>

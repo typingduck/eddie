@@ -1,0 +1,660 @@
+
+How to build and package eddie under Solaris 2.7
+-----------------------------------------------------------
+
+Author:		Jon Holdsworth (jon@central.warehouse.net)
+IP: 		(c) Ericsson Australia Pty Ltd 2000
+Updated:	12/04/2000
+
+This describes the building and packaging of Eddie
+using GNU and the Sun 'pkgtool' packaging suite.
+
+Eddie must have both Erlang (4.9.1) and Open SSL (0.9.3)
+installed in order to build correctly.
+
+In order to run, Eddie must have Erlang (4.9.1) installed.
+
+
+Reference sites:
+
+Eddie
+http://www.eddieware.org
+
+Erlang
+http://www.erlang.org
+
+Erlang patches
+http://www.eddieware.org
+
+Sun Packaging How-To
+http://docs.sun.com/ab2/coll.45.13/PACKINSTALL
+
+Open SSL
+http://www.openssl.org
+
+
+Conventions:
+
+<Anything in angle brackets> is something you have to come
+up with yourself, don't actually type the angle brackets.
+
+
+
+IMPORTANT NOTES
+---------------
+
+()
+
+You need root privileges on the machine.
+This is only for some operations.
+Do not become root until this document tells you to.
+
+
+()
+
+DO NOT build across NFS, instead arrange space on a local drive partition
+to do the compilation and packaging of Eddie.
+
+Permissions-related problems with Sun's NFS will otherwise cause severe
+headaches.
+
+
+()
+
+Your PATH should resemble the following.
+
+You MUST have:
+
+/usr/xpg4/bin 
+
+in your path and it should be near the END of the path,
+and BEFORE /usr/ccs/bin.
+
+Note that this is one continuous line with NO SPACES, its just broken into
+2 lines so that it will fit on this page:
+
+/bin:/usr/bin:/usr/dt/bin:/usr/openwin/bin:/usr/openwin/bin:
+/usr/ucb:/home/jon/bin:/usr/sbin:/usr/local/bin:/usr/xpg4/bin:/usr/ccs/bin
+
+
+()
+
+Your building utilities MUST be GNU only:
+
+	gcc
+	gmake
+	gpatch
+
+These can of course be renamed but they must be the GNU versions.
+
+DO NOT ATTEMPT TO USE SUN'S cc, make OR patch !!
+
+
+()
+
+Before doing any of the following, do:
+
+	ulimit -n 1024
+
+to guarantee that you have enough file descriptors to do the job.
+Under solaris users other than root cannot set ulimit -n larger
+than 256, but root can set it higher for them.
+
+
+
+
+Compiling Eddie 
+--------------------------
+
+WARNING:  YOU DO NOT NEED TO BE ROOT TO COMPILE
+
+Notice will be given later in this document when you should change 
+to 'root' user (superuser).
+
+
+Create a base directory somewhere on a local drive partition.
+
+We shall refer to this directory as <base directory>.
+
+
+
+
+Now do the following in sequence.
+
+
+Change into the directory:
+
+cd <base directory>
+
+
+Remove the existing Eddie source tree if there is one
+(eg. you have been following these steps and you are re-tracing them):
+
+rm -rf fasteddie
+
+
+
+Checkout the eddie source.
+Note that the CVS tag 'stable-11' is used at writing for release versions.
+
+cvs co -r stable-11 fasteddie
+
+
+Change into the Eddie compilation directory:
+
+cd <base directory>/fasteddie
+
+or just:
+
+cd fasteddie
+
+
+
+To find out the version of Eddie you have extracted:
+
+Look in the file <base directory>/fasteddie/vsn.mk
+
+Look for the string:
+
+EDDIE_VSN=<version number>
+
+
+It is a good convention to name the package symbolic name
+from the version number.
+
+For example: 
+
+Eddie 1.1.3  -->  eddie142
+
+This package symbolic name MUST appear in the 'pkginfo' file,
+described below, and in the package construction commands, also
+described below.
+
+
+
+At this point Eddie is ready to configure and build.
+
+
+From the current directory ( <base directory>/eddie ) do
+the following:
+
+./configure
+
+This will complete in a few seconds.
+
+
+We now have to do a couple of minor modifications to fix some sun 
+static library problems before we can compile.
+
+
+Fix <base directory>/fasteddie/eddie.mk:
+
+Change the line:
+
+LDFLAGS= -lsocket -lnsl -L/usr/lib/libnsl.so.1
+
+to:
+
+LIBS=-lsocket -lnsl -L/usr/lib/libnsl.so.1
+
+
+Now remove '-static' directive in <base directory>/fasteddie/inet_server/c_src/Makefile:
+
+Change the line:
+
+$(CC) -o $@ -static $(LDFLAGS) $(BASE_OBJ) $(SSL_OBJ) $(LIBS) $(SSL_LIBS)
+
+to:
+
+$(CC) -o $@ $(LDFLAGS) $(BASE_OBJ) $(SSL_OBJ) $(LIBS) $(SSL_LIBS)
+
+
+
+Start the actual build process:
+
+cd <base directory>/fasteddie
+
+make
+
+
+There should be no errors from this process.
+If there are, read the file README.
+
+
+At this point Eddie has been built, but is not quite ready to package.
+
+
+
+You now need to create 2 more directories, again on a local
+drive partition, which we will refer to as:
+
+<staging directory>		- where we will build the sun package
+<package directory>		- where the finished package will land
+
+If you are repeating this process, it is best to delete these directories
+and their contents and then recreate the directories.
+
+NOTE!
+You also need to be able to write to the directory that is immediately
+above both of these directories, so choose your location carefully!
+
+
+
+
+ **************************************************************
+ *                                                            *
+ * WARNING:  The following operations are best done as 'root' *
+ * so that changing file permissions is not a problem.        *
+ *                                                            *
+ * Be careful!                                                *
+ *                                                            *
+ **************************************************************
+
+
+Note: if you are re-reading these instructions and re-tracing
+your steps, then BEFORE doing the make install, do:
+
+cd <staging directory>
+rm -rf usr/ var/
+cd <base directory>/fasteddie
+
+This is simpler than trying to overwrite an existing tree.
+
+
+In <base directory>/fasteddie do:
+
+make install  root=<staging directory>
+
+
+This will have the effect that from the 'make install' the
+resulting binary tree will be dumped to <staging directory>,
+from where we can then package it.
+
+This make may take a few minutes to complete.
+
+
+There should be no errors from this process.
+If there are, read the file README.
+
+
+The binary tree will now be stored under <staging directory>,
+and the roots of the tree will be called: 
+
+<staging directory>/usr
+<staging directory>/var
+
+
+
+
+
+Packaging Eddie
+-------------------
+
+You should still be root to do this.
+
+Change to the <staging directory>:
+
+cd <staging directory>
+
+
+You now need to invoke your editing program and create
+3 text files in this directory, alongside the usr/ and var/
+directories.
+
+These files are called
+
+pkginfo
+request
+postinstall
+
+
+Their contents are given below.
+Each actual file starts just below the blank line below
+the line of dashes under the file name.
+
+
+
+pkginfo
+-----------------
+
+PKG=eddie
+NAME=Eddie High-Availability Clustering Web Service
+DESC=Load sharing web front-end cluster with intelligent DNS
+ARCH=sparc
+VERSION=V1.0.20
+VENDOR=Ericsson
+CATEGORY=application
+CLASSES=eddie
+BASEDIR=/
+
+
+
+request
+-----------------
+
+#!/bin/sh
+# request script for Eddie package
+# Author:  Jon Holdsworth (@ Imagination Technologies)
+# IP:		(c) Ericsson Australia, 2000
+
+# root directories of install hierarchy,
+#  in other words - the top directories of the eddie tree that gets installed.
+#
+# It defaults to /usr/local and /var, and if you move it then eddie probably wont work!
+#
+# However this does mean you have the ability to make test installations.
+#
+# Convention: paths to be prepended should NOT end in a slash
+#  Instead, the slash should be explicit in the concatenation, as below
+#  This saves much hair-pulling
+
+
+# Eddie requires Erlang to be already installed
+# %% substituted by build-script
+ERLANG_PACKAGE_NAME=%ERLANG_PACKAGE_NAME%
+
+# %% substituted by build-script
+# note leading slash is added here !
+EDDIE_USR_ROOT=/%REL_EDDIE_USR_ROOT%
+EDDIE_VAR_ROOT=/%REL_EDDIE_VAR_ROOT%
+
+
+
+# test for presence of Erlang package - vital to Eddie
+# note that it is _possible_ for Erlang to be present by
+#  other means, eg. a programmer compiled it locally
+# this script only tests for packaged Erlang, it is not its
+#  business to work outside the realm of pkgtool
+#
+
+tmpans=""
+if  pkginfo -q $ERLANG_PACKAGE_NAME  ; then
+  echo "Erlang package detected ($ERLANG_PACKAGE_NAME)" ; 
+else
+  tmpresp = "N"
+  echo
+  echo "No Erlang package detected ($ERLANG_PACKAGE_NAME) !  Proceed (Y/N) ? N" ;
+  echo
+  read tmpans
+  if [ "x$tmpans" != "x" ] ; then tmpresp=$tmpans ; fi
+  if [  "$tmpresp" != "Y" -a "$tmpresp" != "y" ] ; then
+    echo
+    echo "Halting installation."
+    echo
+    exit 3 ;
+  fi
+fi
+
+echo "Installing Eddie..."
+
+
+echo "Installing usr/ components of Eddie to: [$EDDIE_USR_ROOT]"
+echo "Installing var/ components of Eddie to: [$EDDIE_VAR_ROOT]"
+
+
+# send paramters to pkgadd's environment
+#
+cat > $1 << EOF
+EDDIE_USR_ROOT="$EDDIE_USR_ROOT"
+EDDIE_VAR_ROOT="$EDDIE_VAR_ROOT"
+EOF
+# end of file
+
+
+
+postinstall
+---------------------
+
+#!/bin/sh
+echo
+echo  
+echo "Dont forget to edit $EDDIE_USR_ROOT/etc/eddie.conf"
+echo
+echo  
+
+   
+
+
+
+Once these files have been created, your directory should look like:
+
+ls <staging directory>
+pkginfo  postinstall  request    usr  var
+
+
+While in this directory, issue the command:
+
+	find usr/ var/ -print | xargs chown root
+
+to change ownership of all files to 'root', and issue the command:
+
+	find usr/ var/ -print | xargs chgrp root
+
+to change group of all files to 'root'.
+
+
+
+Stay in this directory, and issue the command:
+
+find usr/ var/ -print | pkgproto -c eddie usr/local=\$EDDIE_USR_ROOT var=\$EDDIE_VAR_ROOT > ../prototype
+
+:on one line EXACTLY as it is typed here!
+
+This will create a file called 'prototype' in the directory
+immediately above <staging directory>.
+
+
+
+When this is complete, change up one directory.
+
+Edit the prototype file and add the following lines to the top
+of the file (the top for neatness, they can actually appear anywhere in the file):
+
+i pkginfo
+i request
+i postinstall
+
+Do not leave blank lines !!
+
+
+Now move the prototype file down into <staging directory>.
+
+mv prototype <staging directory>
+
+
+Your <staging directory> should now look like:
+
+ls <staging directory>
+pkginfo    postinstall  prototype  request    usr
+
+
+Congratulations!  You are now ready to actually build the package.
+
+
+Change down into <staging directory>.
+
+cd <staging directory>
+
+
+Remember where you put <package directory> !
+
+
+Issue the following command, the last term is the package symbolic
+name that you created earlier based on the version number.  This
+MUST be the same symbolic name as appears in the 'pkginfo' file!
+
+pkgmk -d <package directory> eddie142
+
+
+This will build the package in <package directory>.
+
+At this point the package is built and can be shipped.
+
+
+
+Checking the eddie package
+-----------------------------
+
+The name of the package in our example is 'eddie142'.
+
+To check the package, change directory to <package directory>:
+
+In this directory there should be a directory called:
+
+eddie142
+
+(or whatever you set the package symbolic name to be)
+
+
+ **************************************************************
+ *                                                            *
+ *         YOU MUST BE ROOT TO INSTALL A SUN PACKAGE          *
+ *                                                            *
+ *             (pkgadd will refuse otherwise)                 *
+ *                                                            *
+ *                                                            *
+ **************************************************************
+
+
+This is based on the thinking that only System Administrators
+should be installing and removing software on the system -
+a concept that has considerable merit!
+
+
+Stay in the current directory and issue the command:
+
+pkgadd -d .
+
+
+You should see something like the following text appear:
+
+
+   The following packages are available:
+     1  eddie142     Eddie Load Balancing Web Gateway daemon
+                     (sparc) V 1.4.2
+
+   Select package(s) you wish to process (or 'all' to process
+   all packages). (default: all) [?,??,q]: 
+
+
+
+To activate the installation, enter '1' and press Return.
+
+Answer 'yes' to all questions.
+
+
+To verify that the package installed correctly, issue the command:
+
+	pkginfo eddie142
+
+or 
+
+	pkginfo | grep eddie
+
+or just
+
+	pkginfo   (eddie should appear at the end of the long list)
+
+
+
+To remove the package, issue the command:
+
+	pkgrm eddie142
+
+and answer 'yes' to all questions.
+
+Do a pkginfo once again after this is complete, to verify that
+the package was removed.
+
+
+Nature of Sun packages
+----------------------
+
+Sun packages are a directory hierarchy full of the files that
+comprise the software to be installed, along with text files that
+describe the other attributes of the package itself.
+Some of these files, like pkginfo and prototype you have already
+seen.
+The exception to this is packages that have been translated
+into 'streamed' format, which are described below.
+
+One file inside the package stores the attributes, including
+owner and group, that all files should have (out of interest
+this is called the 'pkgmap' file.  NEVER edit this file!!).
+
+This allows pkgadd to set the attributes of all the files in
+the hierarchy AFTER it has copied them to their correct locations.
+
+A Sun package is completely self-contained.
+Because pkgtool is standard on all Sun systems, the actual software
+installation database is kept on the system.
+
+Sun packages are read-only, they CANNOT be edited once they have
+been created, as they store sizes and checksums for the software
+files.  To change a package it must be re-created starting with
+the creation of the 'prototype' file, described above.
+
+
+Copying Sun packages
+--------------------
+
+The easiest way to copy a Sun package, eg. to a directory for
+burning onto a cd-r, is to use cpio.
+
+Change to <package directory>, and issue the following command:
+
+find eddie -print | cpio -vpdmu <target directory>
+
+
+This will copy all files inside the package to an identical
+hierarchy, complete with 'eddie' as its root directory,
+under <target directory>.   All permissions and ownerships
+should be preserved by this.
+
+
+
+Creating a 'Streamed' Sun package
+---------------------------------
+
+Sun packages are stored as a directory and file hierarchy.
+However, pkgadd and the other pkgtool utilities recognise
+and can use an alternative format known as 'streamed'
+packages.
+
+A streamed package contains the same information as a 
+normal package, and is in fact created from a normal
+package, but it exists in the form of one giant file
+that has a similar format to a 'tar' file.
+
+Only one package can exist within a single stream file.
+To have multiple streamed packages you have to have
+several stream files.
+
+To create a streamed package, you have to create the
+package as a directory type package and then translate
+it into a streamed package.
+
+To do this you use the 'pkgtrans' utility.
+
+
+pkgtrans -os <package directory> eddie142.pkg eddie142
+
+The stream file is created in <package directory>, unless
+you specify an ABSOLUTE PATH (!!) for the stream file.
+
+The stream file in this example is 'eddie142.pkg', you
+may name the file anything you wish, but at least a .pkg 
+file extension is semi-standard.
+
+The package instance is specified by the 'eddie142' 
+at the end of the command line, this tells pkgtrans
+which one of the packages that it finds in <package directory>
+that you want to translate.
+
+To install from this file, use:
+
+pkgadd -d eddie142.pkg
+
+
+
+[end of document]

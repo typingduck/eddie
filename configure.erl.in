@@ -1,0 +1,18 @@
+-module(configure).
+-export([prefix/0,host/0,exec_prefix/0,bindir/0]).
+
+%%% @configure_input@
+
+prefix() ->
+	"@prefix@".
+
+host() ->
+	"@host@".
+
+exec_prefix() ->
+	{_, S, _} = regexp:sub("@exec_prefix@", "\\${prefix}", prefix()),
+	S.
+
+bindir() ->
+	{_, S, _} = regexp:sub("@bindir@", "\\${exec_prefix}", exec_prefix()),
+	S.

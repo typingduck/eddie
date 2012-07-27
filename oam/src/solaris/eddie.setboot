@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# Usage: ./eddie.setboot on | off
+# must run as root
+
+
+
+EDDIE_BOOT_STATE=$1
+
+
+case x"$EDDIE_BOOT_STATE" in
+  xon)
+        echo
+        echo "ON: Enabling eddie startup at system boot"
+        echo
+        ;;
+  xoff)
+        echo
+        echo "OFF: Removing system boot startup for eddie"
+        echo
+        ;;
+  *)
+        echo
+        echo "Usage: ./`basename $0` on | off"
+        echo " 'on' sets eddie to start at system boot time"
+        echo " 'off' undoes this"
+        echo
+        exit 1
+esac
+
+if [ ! -f /etc/init.d/eddie.init ] ; then
+   echo
+   echo "Warning: /etc/init.d/eddie.init not present!  Not installed ?"
+   echo
+fi
+
+
+# check root user
+
+if [ x`whoami` != "xroot" ] ; then
+  echo "Error: Must run as root!"
+  exit
+fi
+echo 
+echo Running as root - is correct
+echo
+
+
+if [ "$EDDIE_BOOT_STATE" = "on" ] ; then
+
+# now add the symbolic links, using absolute paths
+
+echo
+echo Creating symlinks in rc directories
+echo
+
+cd /etc/rc0.d
+echo
+ln -fs /etc/init.d/eddie.init  K00eddie
+echo
+ls -l /etc/rc0.d/K00eddie
+
+cd /etc/rc2.d
+echo
+ln -fs /etc/init.d/eddie.init  S99eddie
+echo
+ls -l /etc/rc2.d/S99eddie
+
+cd /etc/rcS.d
+echo
+ln -fs /etc/init.d/eddie.init  K00eddie
+echo
+ls -l /etc/rcS.d/K00eddie
+
+else
+
+echo
+echo Removing symlinks from rc directories
+echo
+
+cd /etc/rc0.d
+echo
+ls -l /etc/rc0.d/K00eddie
+echo
+rm -f K00eddie
+
+cd /etc/rc2.d
+echo
+ls -l /etc/rc2.d/S99eddie
+echo
+rm -f S99eddie
+
+cd /etc/rcS.d
+echo
+ls -l /etc/rcS.d/K00eddie
+echo
+rm -f K00eddie
+
+
+fi
+
+echo
+echo All done.

@@ -1,0 +1,42 @@
+1) What is this?
+
+This software package includes one of the Eddie components, the
+Load-balancing DNS Server.
+
+The other Eddie components is the Intelligent HTTP Gateway. They
+can be found at http://www.eddieware.org/. The components can either
+be used separately or together.
+
+The load-balancing DNS server is plug-in compatible with named-4.x.y
+(BIND) and uses the same configuration files. The DNS server uses
+additional load information to direct clients to servers most suitable
+(low load and alive). 
+
+2) Installation, compilation and configuration.
+
+Read the installation guide available at www.eddieware.org.
+It includes some example configurations.
+
+3) Documentation summary
+
+The amount of documentation included in this package is 
+quite meager.  Documentation at this time is primarily in the
+form of papers available at the web site.
+
+README
+	This file
+AUTHORS
+	"I made this!"
+LICENSE
+	Erlang Public License, a modified Mozilla Public License. 
+
+4) Support
+
+If you have problems report this to talk@eddieware.org
+
+Attach the following information:
+
+- A description of the problem.
+- Eddie package version and OS revision.
+- The log files, e.g. /var/tmp/dns.log.{1,5} *and* the
+  /var/tmp/dns_log directory. 

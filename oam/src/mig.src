@@ -1,0 +1,49 @@
+#----------------------------------------------------------------------
+# File    : ex1.mig
+# Contact : team@eddieware.org
+# Purpose : A single computer %PRODUCT_NAME% configuration.
+#           One front end and one back end on the computer europa
+# Version : %EDDIE_VSN%
+#----------------------------------------------------------------------
+
+DNSServer %PRODUCT_NAME%.serc.rmit.edu.au 4567
+
+<Node fe@echo>
+  Interfaces eth0
+  LoadThreshold 0.8 2.0
+</Node>
+
+<Node be@echo>
+  Interfaces eth0
+  LoadThreshold 0.8 2.0
+</Node>
+
+Netmask 255.255.255.255
+
+<Cluster www0101.serc.rmit.edu.au>
+  ClusterType Frontend
+
+  FailoverNodes fe@echo
+  BackendClusters backend0101.serc.rmit.edu.au
+
+  <Server fe@echo>
+    AutoConfig On
+    Interface eth0
+    IPAddress 10.1.0.20
+    Port 8080
+    Start generic module %PRODUCT_NAME% start @IPAddress @Port http
+    Stop generic module %PRODUCT_NAME% stop @IPAddress @Port http
+  </Server>
+</Cluster>
+
+<Cluster backend0101.serc.rmit.edu.au>
+  ClusterType Backend
+
+  <Server be@echo>
+    AutoConfig Off
+    IPAddress 10.1.0.3
+    Port 80
+
+  </Server>
+
+</Cluster>

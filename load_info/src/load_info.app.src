@@ -1,0 +1,11 @@
+{application, load_info,
+ [
+  {description, "EDDIE  CXC xxx xx"},
+  {vsn, "%VSN%"},
+  {modules, [load_app, load_sup, load_server, lonelb ]},
+  {registered, [load_sup, load_server]},
+  {applications, [kernel, stdlib, os_mon, lonelb ]},
+  {env, []},
+  {mod, {load_app, []}}]}.
+
+

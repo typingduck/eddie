@@ -1,0 +1,16 @@
+{release, {"eddie","%I_SYSTEM_VSN%"}, {erts, "%I_VSN%"},
+ [{kernel,"%KERNEL_VSN%"},
+  {stdlib,"%STDLIB_VSN%"},
+  {sasl,"%SASL_VSN%"},
+  {os_mon,"%OS_MON_VSN%"},
+  {mnesia,"%MNESIA_VSN%"},
+  {mnemosyne,"%MNEMOSYNE_VSN%"},
+  {sync_nodes, "%SYNC_NODES_VSN%"},
+  {lonelb, "%DNS_SERVER_VSN%"},
+  {load_info, "%LOAD_INFO_VSN%"},
+  {misc, "%MISC_VSN%"},
+  {inet_server, "%INET_SERVER_VSN%"},
+  {servant, "%SERVANT_VSN%"},
+  {master, "%MASTER_VSN%"},
+  {oam, "%OAM_VSN%"}
+ ]}.

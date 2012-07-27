@@ -1,0 +1,52 @@
+%%%
+%%% The contents of this file are subject to the Erlang Public License,
+%%% Version 1.0, (the "License"); you may not use this file except in
+%%% compliance with the License. You may obtain a copy of the License at
+%%% http://www.eddieware.org/EPL
+%%%
+%%% Software distributed under the License is distributed on an "AS IS"
+%%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+%%% the License for the specific language governing rights and limitations
+%%% under the License.
+%%%
+%%% The Original Code is Erfs-0.2b1.
+%%%
+%%% The Initial Developer of the Original Code is Ericsson Telecom
+%%% AB. Portions created by Ericsson are Copyright (c), 1998, Ericsson
+%%% Telecom AB. All Rights Reserved.
+%%%
+%%% Contributor(s): ______________________________________.
+%%%
+
+%%%----------------------------------------------------------------------
+%%% File    : erfs.app
+%%% Author  : Anders Dahlin  <anders@eddieware.org>
+%%% Purpose : Eddie Replicated File System application resource file
+%%% Created : 14 Oct 1998 by  Anders Dahlin <anders@eddieware.org>
+%%%----------------------------------------------------------------------
+
+{application, erfs,
+ [{description,  "Erlang Replicated File System"},
+  {vsn,          "1.0"},
+  {modules,      [{erfs_app, "0.2b1"}, 
+		  {erfs_sup, "0.2b1"}, 
+		  {erfs, "0.2b1"},
+		  {erfs_add_erfs, "0.2b1"},
+		  {erfs_add_node, "0.2b1"},
+		  {erfs_check_in, "0.2b1"},
+		  {erfs_check_out, "0.2b1"},
+		  {erfs_db, "0.2b1"},
+		  {erfs_delete, "0.2b1"},
+		  {erfs_delete_fs, "0.2b1"},
+		  {erfs_delete_erfs, "0.2b1"},
+		  {erfs_delete_node, "0.2b1"},
+		  {erfs_file, "0.2b1"},
+		  {erfs_init_erfs, "0.2b1"},
+		  {erfs_reset, "0.2b1"},
+		  {erfs_status, "0.2b1"},
+		  {erfs_utils, "0.2b1"}
+		 ]},
+  {registered,   [erfs_app, erfs_sup, erfs]},
+  {applications, [kernel, stdlib, mnesia]},
+  {env,          []},
+  {mod,          {erfs_app, []}}]}.

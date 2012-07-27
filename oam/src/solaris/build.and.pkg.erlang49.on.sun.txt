@@ -1,0 +1,601 @@
+
+How to build and package Erlang 49 otp_src_R6B-0 (OTP R6B Open Source Version) under Solaris 2.7
+----------------------------------------------------------------------------------
+
+Author:		Jon Holdsworth (jon@central.warehouse.net)
+IP: 		(c) Ericsson Australia Pty Ltd 2000
+Updated:	28/03/2000
+
+This describes the building and packaging of Erlang 49 (OTP R6B Open Source Version)
+using GNU and the Sun 'pkgtool' packaging suite.
+
+Reference sites:
+
+Erlang
+http://www.erlang.org
+
+Erlang Patches
+http://www.eddieware.org
+
+Sun Packaging How-To
+http://docs.sun.com/ab2/coll.45.13/PACKINSTALL/
+
+Open SSL
+http://www.openssl.org
+
+GNU
+http://www.gnu.org
+
+Solaris packages
+http://metalab.unc.edu/pub/packages/solaris/sparc/
+http://us-mirror.www.ainet.net/pub/direct/solaris/sparc/
+
+
+Conventions:
+
+<Anything in angle brackets> is something you have to come
+up with yourself, don't actually type the angle brackets.
+
+
+
+IMPORTANT NOTES
+---------------
+
+()
+
+You need root privileges on the machine.
+This is only for some operations.
+Do not become root until this document tells you to.
+
+
+()
+
+DO NOT build across NFS, instead arrange space on a local drive partition
+to do the compilation and packaging of Erlang.
+
+Permissions-related problems with Sun's NFS will otherwise cause severe
+headaches.
+
+
+()
+
+Your PATH should resemble the following.
+
+You MUST have:
+
+/usr/xpg4/bin 
+
+in your path and it should be near the END of the path,
+but BEFORE /usr/ccs/bin.
+
+Note that this is one continuous line with NO SPACES, its just broken into
+2 lines so that it will fit on this page:
+
+/bin:/usr/bin:/usr/dt/bin:/usr/openwin/bin:/usr/openwin/bin:
+/usr/ucb:/home/jon/bin:/usr/sbin:/usr/local/bin:/usr/xpg4/bin:/usr/ccs/bin
+
+
+()
+
+Your building utilities MUST be GNU only:
+
+	gcc
+	gmake
+	gpatch
+
+These can of course be renamed but they must be the GNU versions.
+
+DO NOT ATTEMPT TO USE SUN'S cc, make OR patch !!
+
+
+()
+
+Before doing any of the following, do:
+
+	ulimit -n 1024
+
+to guarantee that you have enough file descriptors to do the job.
+
+()
+
+Erlang 49 requires both Perl5 and OpenSSL to be installed
+for it to compile.
+
+
+Compiling Erlang 49
+-----------------------
+
+WARNING:  YOU DO NOT NEED TO BE ROOT TO COMPILE
+
+Notice will be given later in this document when you should change 
+to 'root' user (superuser).
+
+
+Create a compilation directory somewhere on a local drive partition.
+
+We shall refer to this directory as <compilation directory>.
+
+
+You need several files in total:
+
+
+You need these 2 archive files from www.erlang.org
+
+otp_src_R6B-0.tar.gz
+mnesia-3.8.5.tgz
+
+You need these 16 (at least) patch files from www.eddieware.org
+
+tmp_patch_R6B0.01.1.txt  tmp_patch_R6B0.05.txt    tmp_patch_R6B0.09.txt    tmp_patch_R6B0.13.txt
+tmp_patch_R6B0.02.txt    tmp_patch_R6B0.06.txt    tmp_patch_R6B0.10.txt    tmp_patch_R6B0.14.txt
+tmp_patch_R6B0.03.txt    tmp_patch_R6B0.07.txt    tmp_patch_R6B0.11.txt    tmp_patch_R6B0.15.txt
+tmp_patch_R6B0.04.txt    tmp_patch_R6B0.08.txt    tmp_patch_R6B0.12.txt    tmp_patch_R6B0.16.txt
+
+
+
+Put all those files in <compilation directory>.
+
+
+Now do the following in sequence.
+
+
+Change into the directory:
+
+cd <compilation directory>
+
+
+Remove old source tree
+
+rm -rf otp_src_R6B-0
+
+
+Extract source tree
+
+cat otp_src_R6B-0.tar.gz | gunzip | tar xvf -
+
+
+Changing to source directory
+
+cd otp_src_R6B-0
+
+
+Change down to lib/ directory
+
+cd lib
+
+
+Remove old mnesia
+
+rm -rf mnesia
+
+
+Extract mnesia
+
+cat ../../mnesia-3.8.5.tgz | gunzip | tar xvf -
+
+
+Change back up to source directory
+
+cd ..
+
+
+Apply patches
+
+NOTE - order is important!
+These patch files are named to guarantee
+ensure alphanumerical order, so that the following
+command line is safe.
+However it is generally safer to apply patch files
+one at a time, but more tedious.
+
+cat ../tmp_patch_*.txt | /usr/local/bin/patch -p0
+
+Note that we have used the explicit path to the
+GNU patch program for safety.
+
+
+
+At this point Erlang 49 is ready to configure and build.
+
+
+From the current directory ( <compilation directory>/otp_src_R6B-0 ) do
+the following:
+
+./configure
+
+make
+
+
+There should be no errors from this process.
+If there are, read the file INSTALL.
+
+
+At this point Erlang 49 has been built, but is not quite ready to package.
+
+
+
+You now need to create 2 more directories, again on a local
+drive partition, which we will refer to as:
+
+<staging directory>		- where we will build the sun package
+<package directory>		- where the finished package will land
+
+NOTE!
+You also need to be able to write to the directory that is immediately
+_above_ both of these directories, so choose your location carefully!
+
+
+
+
+ **************************************************************
+ *                                                            *
+ * WARNING:  The following operations are best done as 'root' *
+ * so that changing file permissions is not a problem.        *
+ *                                                            *
+ * Be careful!                                                *
+ *                                                            *
+ **************************************************************
+
+
+
+In the current directory do:
+
+make install  INSTALL_PREFIX=<staging directory>
+
+This will have the effect that from the 'make install' the
+resulting binary tree will be dumped to <staging directory>, from
+where we can then package it.
+
+This may take a few minutes to complete.
+
+
+There should be no errors from this process.
+If there are, read the file INSTALL.
+
+
+The binary tree will now be stored under <staging directory>,
+and the root of the tree will be called: 
+
+<staging directory>/usr
+
+
+Note: if you are re-reading these instructions and re-tracing
+your steps, then BEFORE doing the make install, do:
+
+cd <staging directory>
+rm -rf usr/
+
+This is simpler than trying to overwrite an existing tree.
+Note that Erlang is very large and this may take a few seconds.
+
+
+
+
+Packaging Erlang 49
+-------------------
+
+You should still be root to do this.
+
+Change to the <staging directory>:
+
+cd <staging directory>
+
+
+You now need to invoke your editing program and create
+2 text files in this directory, alongside the usr/
+directory.
+
+These files are called
+
+pkginfo
+request
+
+
+Their contents are given below.
+
+
+
+pkginfo file (text begins below blank line)
+-------------------------------------------
+
+PKG="erlang49"
+NAME="Erlang (Ericsson Erlang Computer Language)"
+ARCH="sparc"
+VERSION="V 49 (OTP R6B-0 Open Source Version)"
+VENDOR="Ericsson"
+CATEGORY="application"
+CLASSES="erlang"
+BASEDIR="/"
+
+
+
+request file (text begins below blank line)
+-------------------------------------------
+
+#!/bin/sh
+# request script for Erlang package
+# Author:  Jon Holdsworth (@ Imagination Technologies)
+# IP:		(c) Ericsson Australia, 2000
+
+# root directories of install hierarchy,
+#  in other words - the top directories of the erlang tree that gets installed.
+#
+# It defaults to /usr/local and /var, and if you move it then erlang probably wont work!
+#
+# However this does mean you have the ability to make test installations.
+#
+# Note that ROOT is intended purely for testing but should preceed ALL paths
+#  as shown below.
+# Convention: do not put trailing slashes in prepended path aliases, instead put the 
+#  slashes in explicitly when you evaluate the alias.
+#
+
+#ROOT=/usr/jon/erlang.testing
+ROOT=
+
+
+# set default
+#
+
+ERLANG_USR_ROOT=$ROOT/usr/local
+
+
+echo "Installing usr/ component of Eddie to: [$ERLANG_USR_ROOT]"
+
+
+# send paramters to pkgadd's environment
+#
+
+cat > $1 << EOF
+ERLANG_USR_ROOT="$ERLANG_USR_ROOT"
+EOF
+
+# end of file
+
+
+
+Once these files have been created, your directory should look like:
+
+ls <staging directory>
+pkginfo  request    usr
+
+
+While in this directory, issue the command:
+
+	find usr/ -print | xargs chown root
+
+to change ownership of all files to 'root', and issue the command:
+
+	find usr/ -print | xargs chgrp root
+
+to change group of all files to 'root'.
+
+
+
+Stay in this directory, and issue the command:
+
+find usr/ -print | pkgproto -c erlang usr/local=\$ERLANG_USR_ROOT > ../prototype
+
+EXACTLY as it is typed here!
+
+This will create a file called 'prototype' in the directory
+immediately above <staging directory>.
+
+
+
+When this is complete, change up one directory.
+
+Edit the prototype file and add the following 2 lines to the top
+of the file (the top for neatness, they can actually appear anywhere in the file):
+
+i pkginfo
+i request
+
+Do not leave blank lines !!
+
+
+Now move the prototype file down into <staging directory>.
+
+Your <staging directory> should now look like:
+
+ls <staging directory>
+pkginfo    prototype  request    usr
+
+
+Congratulations!  You are now ready to actually build the package.
+
+
+Change down into <staging directory>.
+
+
+Remember where you put <package directory> !
+
+
+Issue the following command:
+
+
+pkgmk -d <package directory> erlang49
+
+
+This will build the package in <package directory>.
+
+At this point the package is built and can be shipped.
+
+
+
+Checking the erlang49 package
+-----------------------------
+
+The name of the package is 'erlang49'.
+Although Sun packages carry version numbers,
+and you entered a version number above in the pkginfo file,
+it is much easier to check dependencies via the name of
+the package .
+
+(Sun packages as they are widely used traditionally ignore
+many of the features that the pkgtool suite has,
+as there are generally much simpler ways to do things).
+
+
+
+To check the package, change directory to <package directory>:
+
+In this directory there should be a directory called:
+
+erlang49
+
+
+ **************************************************************
+ *                                                            *
+ *         YOU MUST BE ROOT TO INSTALL A SUN PACKAGE          *
+ *                                                            *
+ *             (pkgadd will refuse otherwise)                 *
+ *                                                            *
+ *                                                            *
+ **************************************************************
+
+
+This is based on the thinking that only System Administrators
+should be installing and removing software on the system -
+a concept that has considerable merit!
+
+
+Stay in the current directory and issue the command:
+
+pkgadd -d .
+
+
+You should see the following text appear:
+
+
+   The following packages are available:
+     1  erlang49     Erlang (Ericsson Erlang Computer Language)
+                     (sparc) V 49 (OTP R6B-0 Open Source Version)
+
+
+   Select package(s) you wish to process (or 'all' to process
+   all packages). (default: all) [?,??,q]: 
+
+
+
+To activate the installation, enter '1' and press Return.
+
+Answer 'yes' to all questions.
+
+
+To verify that the package installed correctly, issue the command:
+
+	pkginfo erlang49
+
+or 
+
+	pkginfo | grep erlang
+
+or just
+
+	pkginfo   (erlang should appear at the end of the long list)
+
+
+
+To remove the package, issue the command:
+
+	pkgrm erlang49
+
+and answer 'yes' to all questions.
+
+Do a pkginfo once again after this is complete, to verify that
+the package was removed.
+
+
+Nature of Sun packages
+----------------------
+
+Sun packages are a directory hierarchy full of the files that
+comprise the software to be installed, along with text files that
+describe the other attributes of the package itself.
+Some of these files, like pkginfo and prototype you have already
+seen.
+The exception to this is packages that have been translated
+into 'streamed' format, which are described below.
+
+One file inside the package stores the attributes, including
+owner and group, that all files should have (out of interest
+this is called the 'pkgmap' file.  NEVER edit this file!!).
+
+This allows pkgadd to set the attributes of all the files in
+the hierarchy AFTER it has copied them to their correct locations.
+
+A Sun package is completely self-contained.
+Because pkgtool is standard on all Sun systems, the actual software
+installation database is kept on the system.
+
+Sun packages are read-only, they CANNOT be edited once they have
+been created, as they store sizes and checksums for the software
+files.  To change a package it must be re-created starting with
+the creation of the 'prototype' file, described above.
+
+
+Copying Sun packages
+--------------------
+
+The easiest way to copy a Sun package, eg. to a directory for
+burning onto a cd-r, is to use cpio.
+
+Change to <package directory>, and issue the following command:
+
+find erlang49 -print | cpio -vpdmu <target directory>
+
+
+This will copy all files inside the package to an identical
+hierarchy, complete with 'erlang49' as its root directory,
+under <target directory>.   All permissions and ownerships
+should be preserved by this.
+
+
+
+Creating a 'Streamed' Sun package
+---------------------------------
+
+Sun packages are stored as a directory and file hierarchy.
+However, pkgadd and the other pkgtool utilities recognise
+and can use an alternative format known as 'streamed'
+packages.
+
+A streamed package contains the same information as a 
+normal package, and is in fact created from a normal
+package, but it exists in the form of one giant file
+that has a similar format to a 'tar' file.
+
+Only one package can exist within a single stream file.
+To have multiple streamed packages you have to have
+several stream files.
+
+To create a streamed package, you have to translate
+an existing normal package into one.
+
+To do this you use the 'pkgtrans' utility.
+
+
+pkgtrans -os <package directory> erlang49.pkg erlang49
+
+The stream file is created in <package directory>, unless
+you specify an ABSOLUTE PATH (!!) for the stream file.
+
+The stream file in this example is 'erlang.pkg', you
+may name them anything you wish, but .pkg is semi-standard.
+
+The package instance is specified by the 'erlang49' 
+at the end of the command line, this tells pkgtrans
+which one of the packages that it finds in <package directory>
+that you want to translate.
+
+To install from this file, use:
+
+pkgadd -d erlang49.pkg
+
+Note: at writing the target directory for cd-r burning was:
+
+eddieware:/usr/home2/scratch
+
+
+[end of document]

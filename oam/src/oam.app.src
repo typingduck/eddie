@@ -1,0 +1,7 @@
+{application,oam,
+ [{description,"OAM"},
+  {vsn,"%VSN%"},
+  {modules,[oam]},
+  {registered,[]},
+  {env, [ { dnsonly, false } ] },
+  {applications,[kernel,stdlib]}]}.

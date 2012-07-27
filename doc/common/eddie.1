@@ -1,0 +1,115 @@
+.\" @(#)Eddie.1 
+.TH eddie 1 "1 Sep 1999"
+.SH NAME
+eddie \- start an HTTP high availability clustering tool
+.SH SYNOPSIS
+.B eddie
+.IR Command 
+[
+.IR -p
+Path
+]
+[
+.IR -vn
+]
+.IR -c
+Cookie
+.IR -d
+Directory
+.LP
+.SH DESCRIPTION
+.IX "Eddie command" "" "\fLEddie\fP \(emhammer http port"
+.IX "http" "port" "" "make \(em \fLEddie\fP"
+.B Eddie
+is used as a high availability clustering HTTP gateway which can
+handle incoming requests on a nominated port (as specified in the 
+.B GatewayFile).
+and redistribute them 
+among a number of HTTP servers (such as Apache). 
+.B Eddie
+provides load balancing, admission control and handles machine
+failure. In conjunction with the 
+.B Eddie Enhanced DNS 
+it provides a single point of contact for users of your web site;
+while maximising their chance of getting service by utilising
+clusters of HTTP servers.
+.PP
+The behaviour of
+.B Eddie
+is defined by two configuration files.
+See the description of these files below for an explanation of all of
+the configuration options.
+.PP
+.SH COMMANDS
+The following commands are supported:
+.TP 10
+.I init
+Initialise an Eddie node
+.TP 10
+.I config 
+Configure an Eddie cluster
+.TP 10
+.I start
+Start an Eddie node
+.TP 10
+.I stop
+Stop an Eddie node
+.TP 10
+.I status
+Get some runtime information about an Eddie node.
+.TP 10
+.I add
+Add an Eddie node to a running system
+.TP 10
+.I delete
+Delete an Eddie node from a running system.
+.TP 10
+.I load
+Start an Eddie load information node only (for LBDNS only setup).
+
+.SH OPTIONS
+The following options are supported:
+.TP 10
+.B \-c
+Specify Cookie to be used
+.TP 10
+.B \-d 
+Specify the Mnesia database Directory to be used.
+.TP 10
+.B \-v 
+Verbose ouput. Run in foreground.
+.TP 10
+.B \-m 
+Migration configuration file (config command only)
+.TP 10
+.B \-g 
+Gateway configuration file (config command only)
+.TP 10
+.B \-p 
+Add a Path to your call-back modules. *Always* add
+/examples to the path. It does not hurt!
+.TP 10
+.B \-n 
+Start a dummy Eddie node, i.e. to be used prior to the eadd and
+edelete commands if no appropriate node is running.
+.PP
+.SH CONFIGURATION FILES
+This section is incomplete.
+.SH EXAMPLES
+This section is incomplete.
+.SH "EXIT STATUS"
+The following exit values are returned:
+.PD 0
+.TP 10
+.B 0
+
+.B Eddie
+ran successfully to completion.
+.TP
+.B >0
+An error occurred.
+.PD
+.SH "SEE ALSO"
+.BR lbdns (1)
+.SH NOTES
+This section is incomplete.

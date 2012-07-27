@@ -1,0 +1,23 @@
+@ IN SOA     coke.foobarcorp.com.au. dns.coke.foobarcorp.com.au. (
+     199904031 ; Serial
+     21600     ; Refresh (6 hours)
+     3600      ; Retry (1 hour)
+     2592000   ; Expire (1 month)
+     86400 )   ; Minimum (1 day)
+
+localhost IN A 127.0.0.1
+
+www     IN A 173.20.128.1
+	IN A 173.20.128.2
+	IN A 173.20.128.3
+
+; we 120 as TTL for each individual host too
+coke   120 IN A 173.20.128.1
+pepsi  120 IN A 173.20.128.2
+jolt   120 IN A 173.20.128.3
+
+
+
+
+
+

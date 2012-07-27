@@ -1,0 +1,8 @@
+{release, {"dns","%I_SYSTEM_VSN%"}, {erts, "%I_VSN%"},
+ [{kernel,"%KERNEL_VSN%"},
+  {stdlib,"%STDLIB_VSN%"},
+  {sasl, "%SASL_VSN%"},
+  {misc, "%MISC_VSN%"},
+  {crypto, "%CRYPTO_VSN%" },
+  {dns_server, "%I_DNS_VSN%"}]}.
+

@@ -1,0 +1,105 @@
+%%%----------------------------------------------------------------------
+%%% File    : SKEL-FILE
+%%% Author  : SKEL-AUTHOR-2
+%%% Created : SKEL-CREATED
+%%% Purpose : SKEL-PURPOSE
+%%%
+%%% The contents of this file are subject to the Erlang Public License
+%%% License, Version 1.0, (the "License"); you may not use this file
+%%% except in compliance with the License. You may obtain a copy of the
+%%% License at http://www.eddieware.org/EPL
+%%%
+%%% Software distributed under the License is distributed on an "AS IS"
+%%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+%%% the License for the specific language governing rights and limitations
+%%% under the License.
+%%%
+%%% The Original Code is Eddie-0.83b1.
+%%%
+%%% The Initial Developer of the Original Code is Ericsson Telecom
+%%% AB. Portions created by Ericsson are Copyright (C), 1998,1999 Ericsson
+%%% Telecom AB. All Rights Reserved.
+%%%
+%%% Author:
+%%% Contributor(s): ______________________________________.
+%%%----------------------------------------------------------------------
+
+-module(SKEL-MODULE).
+-author('SKEL-AUTHOR-1').
+-vc('$Id: gen_event.skel,v 1.1 2000/10/27 22:20:27 dredd Exp $ ').
+-id('$Id: gen_event.skel,v 1.1 2000/10/27 22:20:27 dredd Exp $ ').
+-source('$Source: /cvsroot/eddie/eddie/skeletons/gen_event.skel,v $ ').
+-revision('$Revision: 1.1 $ ').
+-date('$Date: 2000/10/27 22:20:27 $ ').
+-state('$State: Exp $ ').
+
+-behaviour(gen_event).
+
+%% External exports
+-export([start_link/0, add_handler/0]).
+
+%% gen_event callbacks
+-export([init/1, handle_event/2, handle_call/2, handle_info/2, terminate/2]).
+
+-record(state, {}).
+
+%%%----------------------------------------------------------------------
+%%% API
+%%%----------------------------------------------------------------------
+start_link() ->
+    gen_event:start_link({local, }). 
+
+add_handler() ->
+    gen_event:add_handler(, , []).
+
+%%%----------------------------------------------------------------------
+%%% Callback functions from gen_event
+%%%----------------------------------------------------------------------
+
+%%----------------------------------------------------------------------
+%% Func: init/1
+%% Returns: {ok, State}          |
+%%          Other
+%%----------------------------------------------------------------------
+init([]) ->
+    {ok, #state{}}.
+
+%%----------------------------------------------------------------------
+%% Func: handle_event/2
+%% Returns: {ok, State}                                |
+%%          {swap_handler, Args1, State1, Mod2, Args2} |
+%%          remove_handler                              
+%%----------------------------------------------------------------------
+handle_event(Event, State) ->
+    {ok, State}.
+
+%%----------------------------------------------------------------------
+%% Func: handle_call/2
+%% Returns: {ok, Reply, State}                                |
+%%          {swap_handler, Reply, Args1, State1, Mod2, Args2} |
+%%          {remove_handler, Reply}                            
+%%----------------------------------------------------------------------
+handle_call(Request, State) ->
+    Reply = ok,
+    {ok, Reply, State}.
+
+%%----------------------------------------------------------------------
+%% Func: handle_info/2
+%% Returns: {ok, State}                                |
+%%          {swap_handler, Args1, State1, Mod2, Args2} |
+%%          remove_handler                              
+%%----------------------------------------------------------------------
+handle_info(Info, State) ->
+    {ok, State}.
+
+%%----------------------------------------------------------------------
+%% Func: terminate/2
+%% Purpose: Shutdown the server
+%% Returns: any
+%%----------------------------------------------------------------------
+terminate(Reason, State) ->
+    ok.
+
+%%%----------------------------------------------------------------------
+%%% Internal functions
+%%%----------------------------------------------------------------------

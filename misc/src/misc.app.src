@@ -1,0 +1,16 @@
+{application,misc,
+ [{description,"Misc"},
+  {vsn,"%VSN%"},
+  {modules,[misc_app,
+            misc_sup,
+            config_file,
+	    db,
+	    disk_log_handler,
+	    sig_handler,
+	    misc,
+	    syslog_handler,
+            sig_ex]},
+  {registered,[]},
+%  {applications,[kernel,stdlib,mnesia,mnemosyne]}]}.
+  {applications,[kernel,stdlib]},
+  {mod,{misc_app,[]}}]}.

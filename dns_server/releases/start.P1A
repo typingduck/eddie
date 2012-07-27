@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# This program invokes the erlang emulator by calling run_erl.
+# It should only be used at an embedded target system.
+# It should be modified to give the correct flags to erl (via start_erl),
+# e.g -mode embedded -sname XXX
+#
+# Usage: start [Data]
+#
+ROOTDIR=/home/share/magnus/otp_r3b02
+#ROOTDIR=/usr/local/share/pgm/beam_r4a
+
+RELDIR=/home/share/magnus/dns_server/releases
+
+HEART_COMMAND=$RELDIR/start
+export HEART_COMMAND
+
+if [ -z "$RELDIR" ]
+then
+   RELDIR=$ROOTDIR/releases
+fi
+
+START_ERL_DATA=${1:-$RELDIR/start_erl.data}
+
+$ROOTDIR/bin/start_erl $ROOTDIR $RELDIR $START_ERL_DATA -pa /home/share/magnus/dns_server/dns_server-0.5/ebin 
+
+# -heart -noshell -s getty > /dev/null 2>&1 &
+
+

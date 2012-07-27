@@ -1,0 +1,7 @@
+@	IN MX 10	super
+styx	IN MX 10	super
+pluto	IN MX  0	pluto
+	IN MX 10	super
+test IN A 150.236.14.67
+ IN A 150.236.14.68
+ IN A 150.236.14.70

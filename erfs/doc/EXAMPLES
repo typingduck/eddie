@@ -1,0 +1,100 @@
+%%%
+%%% The contents of this file are subject to the Erlang Public License,
+%%% Version 1.0, (the "License"); you may not use this file except in
+%%% compliance with the License. You may obtain a copy of the License at
+%%% http://www.eddieware.org/EPL
+%%%
+%%% Software distributed under the License is distributed on an "AS IS"
+%%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+%%% the License for the specific language governing rights and limitations
+%%% under the License.
+%%%
+%%% The Original Code is Erfs-0.2b1.
+%%%
+%%% The Initial Developer of the Original Code is Ericsson Telecom
+%%% AB. Portions created by Ericsson are Copyright (c), 1998, Ericsson
+%%% Telecom AB. All Rights Reserved.
+%%%
+%%% Contributor(s): ______________________________________.
+%%%
+
+
+Here are some examples of how Erfs-0.2b1 can be used.
+
+
+- Start the first node.
+
+On UNIX, in a shell:
+erl -sname s1 -setcookie marvin -mnesia dir '"/var/tmp/s1"'
+
+On Windows, from a DOS-prompt:
+werl -sname s1 -setcookie marvin -mnesia dir '"/var/tmp/s1"'
+
+This will just start an erlang node with the name s1@MACHINE, where
+MACHINE is the name of the machine your running the command on. My
+machine is called joey.
+
+
+- Start ERFS on the first node.
+
+From the erlang shell:
+
+(s1@joey)1> application:start(mnesia).
+ok
+(s1@joey)2> application:start(erfs).
+ok
+(s1@joey)3> 
+
+
+- Start another node (possibly at another machine, in this example on
+the machine sumba):
+
+On UNIX, from a shell:
+erl -sname s2 -setcookie marvin -mnesia dir '"/var/tmp/s2"' -mnesia extra_db_nodes '[s1@joey]'
+
+On Windows, from a DOS-prompt:
+werl -sname s2 -setcookie marvin -mnesia dir '"/var/tmp/s2"' -mnesia
+extra_db_nodes [s1@joey]
+
+Then run
+
+(s1@joey)3> erfs:add_node(s2@sumba).
+ok
+
+From the erlang shell of a running ERFS, in this case s1@joey.
+
+
+- Initialize an ERFS
+
+From the erlang shell of a running ERFS:
+
+(s1@joey)4> erfs:init_erfs(test, [{s1@joey, "/test"}, {s2@sumba, "/foo/bar"}]).
+ok
+
+
+- Check out the root directory
+
+(s1@joey)5> erfs:check_out(test, "/").
+ok
+
+
+- Check in the root directory
+
+(s1@joey)6> erfs:check_in(test, "/").
+ok
+
+
+- Remove an erfs from one node
+
+(s1@joey)7> erfs:delete_erfs(test, s2@sumba).
+ok
+
+
+- Add an erfs to one node
+
+(s1@joey)8> erfs:add_erfs(test, {s2@sumba, "/foo/bar2"}).
+ok
+
+
+
+

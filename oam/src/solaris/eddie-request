@@ -1,0 +1,112 @@
+#!/bin/sh
+# request script for Eddie package
+# Author:  Jon Holdsworth (@ Imagination Technologies)
+# IP:		(c) Ericsson Australia, 2000
+
+# root directories of install hierarchy,
+#  in other words - the top directories of the eddie tree that gets installed.
+#
+# It defaults to /usr/local and /var, and if you move it then eddie probably wont work!
+#
+# However this does mean you have the ability to make test installations.
+#
+# Note that ROOT is intended purely for testing but should preceed ALL paths
+#  as shown below.
+# Convention: paths to be prepended should NOT end in a slash
+#  Instead, the slash should be explicit in the concatenation, as below
+#  This saves much hair-pulling
+
+
+# Eddie requires Erlang to be already installed
+# %% substituted by build-script
+ERLANG_PACKAGE_NAME=%ERLANG_PACKAGE_NAME%
+
+# %% substituted by build-script
+# note leading slash is added here !
+EDDIE_USR_ROOT=/%REL_EDDIE_USR_ROOT%
+EDDIE_VAR_ROOT=/%REL_EDDIE_VAR_ROOT%
+EDDIE_ETC_ROOT=/%REL_EDDIE_ETC_ROOT%
+
+
+# check if there is a eddie already installed.
+# if there is, check its revision number - if that
+#  number is numerically later than the one we own,
+#  then raise now a warning and an optional exit.
+# pkgadd itself will raise a warning later.
+
+if pkginfo -q "$PKG" ; then
+  echo "This package <$PKG> is already installed"
+  echo "Checking Revision number..."
+  INSTALLED_REVISION_NUMBER=`pkgparam $PKG "VERSION" | awk '{ print $3 }'`
+  OUR_REVISION_NUMBER=`echo $VERSION | awk '{ print $3 }'`
+  echo "Theirs: $INSTALLED_REVISION_NUMBER"
+  echo "Ours:   $OUR_REVISION_NUMBER"
+
+  if [ $INSTALLED_REVISION_NUMBER -gt $OUR_REVISION_NUMBER ] ; then
+    echo "WARNING: You may be about to install an earlier revision package ($OUR_REVISION_NUMBER)"
+    echo "  of Eddie over a later version package ($INSTALLED_REVISION_NUMBER)."
+    echo
+    echo "Do you wish to proceed ? (Y/N) : N"
+
+    tmpresp = "N"
+    tmpans=""
+    read tmpans
+    if [ "x$tmpans" != "x" ] ; then tmpresp=$tmpans ; fi
+    if [  "$tmpresp" != "Y" -a "$tmpresp" != "y" ] ; then
+      echo
+      echo "Halting installation."
+      echo
+      exit 3 ;
+    fi
+
+    echo
+    echo "Proceeding..."
+    echo
+
+  fi
+
+fi
+
+
+# following code is obsoleted by depend file entries.-
+# test for presence of Erlang package - vital to Eddie
+# note that it is _possible_ for Erlang to be present by
+#  other means, eg. a programmer compiled it locally
+# this script only tests for packaged Erlang, it is not its
+#  business to work outside the realm of pkgtool
+#
+
+#tmpans=""
+#if  pkginfo -q $ERLANG_PACKAGE_NAME  ; then
+  #echo "Erlang package detected ($ERLANG_PACKAGE_NAME)" ; 
+#else
+  #tmpresp = "N"
+  #echo
+  #echo "No Erlang package detected ($ERLANG_PACKAGE_NAME) !  Proceed (Y/N) ? N" ;
+  #echo
+  #read tmpans
+  #if [ "x$tmpans" != "x" ] ; then tmpresp=$tmpans ; fi
+  #if [  "$tmpresp" != "Y" -a "$tmpresp" != "y" ] ; then
+    #echo
+    #echo "Halting installation."
+    #echo
+    #exit 3 ;
+  #fi
+#fi
+
+echo "Installing Eddie..."
+
+
+echo "Installing usr/ components of Eddie to: [$EDDIE_USR_ROOT]"
+echo "Installing var/ components of Eddie to: [$EDDIE_VAR_ROOT]"
+echo "Installing etc/ components of Eddie to: [$EDDIE_ETC_ROOT]"
+
+
+# send paramters to pkgadd's environment
+#
+cat > $1 << EOF
+EDDIE_USR_ROOT="$EDDIE_USR_ROOT"
+EDDIE_VAR_ROOT="$EDDIE_VAR_ROOT"
+EDDIE_ETC_ROOT="$EDDIE_ETC_ROOT"
+EOF
+# end of file

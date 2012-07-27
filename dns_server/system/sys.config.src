@@ -1,0 +1,8 @@
+[{kernel, [{error_logger, false},
+           {start_disk_log, true},
+           {start_pg2, true}]},
+ {sasl, [{sasl_error_logger, false},
+%	 {error_logger_mf_dir, Dir}, %% Configured in start script !!
+         {error_logger_mf_maxbytes, %MF_BYTES%},
+         {error_logger_mf_maxfiles, %MF_FILES%}]}].
+

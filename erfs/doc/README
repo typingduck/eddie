@@ -1,0 +1,160 @@
+
+Aug 1999.
+
+Hmm - I've included this package in the Open Source distribution
+because it has some interesting ideas. Personally I think
+it should probably be a separate package (for example
+a fully replicated file system type for Linux would rock!).
+
+Anyway - it was originally written to be part of Eddie;
+so here it is.
+
+It is NOT functional.
+
+Geoff Wong.
+geoff@eddieware.org
+
+
+----- original README below.
+
+
+%%%----------------------------------------------------------------------
+%%% File    : README
+%%% Author  : Anders Dahlin <anders@eddieware.org>
+%%% Purpose : Description of Erlang Replicated File System 0.1 Beta
+%%% Created :  8 Dec 1998 by Anders Dahlin <anders@eddieware.org>
+%%%----------------------------------------------------------------------
+
+Erlang (or Eddie) Replicated File System, ERFS-0.1 Beta
+
+- What is ERFS?
+
+Erlang (or Eddie) Replicated File System, ERFS, is a simple approach
+towards a fully replicated multi-master file system. The general idea
+is to work in the ordinary file system and when the need occurs to use
+CVS-style metaphors to control single files or directories, possibly
+containing other files or directories. The aim for ERFS is content
+replication within a LAN. Erfs uses well tested functionality in
+Erlang 4.7.3 (JAM) to guarantee robustness. Before we travel any
+further down this road we need to know if this is a viable approach.
+
+
+- Requirements
+
+ERFS-0.1 Beta requires Erlang 4.7.3 (JAM) on UNIX and Erlang 4.7.3.1
+on Windows. These can be found from http://www.erlang.org/
+
+ERFS-0.1 Beta also requires some knowledge about the erlang and the
+erlang shell.
+
+
+- Current state
+
+ERFS is in early beta state. Things will change. Much functionality is
+missing (see the TODO file for more details on what might be
+implemented in the near future).
+
+
+- Feedback
+
+Please send feedback to, anders@eddieware.org. We need to know if this
+is something that can be of any use. Do we actually solve any
+problems? What is missing? What needs to be changed?
+
+
+- How it is done
+
+ERFS is implemented in Erlang 4.7.3 (JAM) and has been tested on
+Solaris, Linux and Windows 9x/NT. To run on Windows you need to use a
+patched version of Erlang 4.7.3 (JAM) (patch erl_083_otp_win32.exe).
+ERFS requires that Erlang 4.7.3 (JAM) and ERFS to run on each node
+which should be a part of the replicated file system. Due to some
+limitations in Mnesia, the database management system in Erlang 4.7.3
+(JAM), some operations in ERFS requires that all nodes are up during
+the operation. ERFS also requires that, whoever is running Erlang
+4.7.3 (JAM) has read and write permission where the files and
+directories will be stored.
+
+ERFS is in a very early beta state and will continue to be so until we
+know that is has some desired functionality and you'll find it
+usable. The TODO file contains ideas that might be implemented.
+
+Basically files and directories is kept in the ordinary file system
+and journaling data about them is kept in Mnesia. ERFS will make sure
+that all nodes has the right version of a file or directory on a user
+driven base.
+
+
+- How it works
+
+You need to have ERFS running on each node that should be part of your
+replicated file system. Look in the EXAMPLES on details about how to
+run ERFS. After ERFS is running on at least one node, you're free to
+start adding file systems to it. File systems in ERFS needs to have a
+name. You need to defined where the physical root directory for your
+replicated file system should be on each node. Once that is done use
+functions in the erlang module erfs to control the file system. To
+manipulate a file or directory, start by checking it out. Once you are
+done use check in to replicate your changes to all other nodes.
+
+
+- Functionality in ERFS-0.1 Beta
+
+All functions are in the erfs module
+
+- add_node(Node) 
+Add a node (replica) to ERFS. The node should already be
+started. Se EXAMPLES for details.
+
+- delete_node(Node)
+Delete a node (replica) from ERFS. The node will be deleted from the
+database and stopped.
+
+- init_erfs(Erfs, NodeDefs) 
+Initialize a file system named Erfs. NodeDefs should be list defining
+where to find the root directory for each node that should be a part
+of this file system. NodeDefs has the format [{Node1, Root1}, {Node2,
+Root2}, ... {NodeN, RootN}]. The root directories will be created and
+should not exist prior to running this command. A directory named
+.erfstemp will be created in the root directory as well. This
+directory is used for file transfers and should not be removed or used
+in any other way. The root directory of an ERFS is "/" (slash). Even
+in the windows environment slash is used as the directory
+delimiter. Access of files or directories in ERFS must be absolute.
+
+- add_erfs(Erfs, NodeDef)
+Add an erfs to a node. NodeDef is a tuple {Node, Root}, which
+indicates where the rootdir for Erfs should be on the node, Node. Only
+succeeds if nobody is manipulating Erfs. 
+
+- delete_erfs(Erfs)
+Delete a file system. Only succeeds if nobody is manipulating Erfs.
+
+- delete_erfs(Erfs, Node)
+Delete an erfs on a Node. Only succeeds if nobody is manipulating Erfs.
+
+- check_out(Erfs, Path) 
+Check out the file or directory Path. Path must be absolute. This will
+only succeed if no one else has checked out anything in Path. If Path
+is a directory, everything below it will be checked out, including
+other directories. Once you have checked out a file or directory
+manipulate them any way you want and then use check_in(Erfs, Path) to
+replicated your changes to all other nodes. Nobody will be allowed to
+check out or delete something that is checked out by somebody else.
+
+- check_in(Erfs, Path)
+Check in the file or directory Path. Path must be absolute. This will
+only succeed if you have checked out Path prior to running this
+command. The changes you have made in Path will be replicated to all
+other nodes part of this particular ERFS.
+
+- delete(Erfs, Path)
+Delete Path from the ERFS Erfs.
+
+- status(Erfs, Path)
+Report the state of Path. Will return a list on the format [{State1,
+[Path1, Path2, ... PathN]}, {State2, [Path1, Path2, ... PathN]}, ...]
+
+- reset(Erfs, Path)
+Will force the state of Path and it's contents to 'ok'. This function
+exist because ERFS is still in beta.

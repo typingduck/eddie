@@ -1,0 +1,9 @@
+PKG=eddie
+NAME=Eddie High-Availability Clustering Web Service
+DESC=Load sharing web front-end cluster with intelligent DNS
+ARCH=sparc
+VERSION=V1.4.2
+VENDOR=Ericsson
+CATEGORY=application
+CLASSES=eddie
+BASEDIR=/

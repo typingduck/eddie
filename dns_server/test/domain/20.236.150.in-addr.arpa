@@ -1,0 +1,50 @@
+@ IN SOA     super.du.etx.ericsson.se. lsa.erix.ericsson.se. (
+     199803171 ; Serial
+     21600     ; Refresh (6 hours)
+     3600      ; Retry (1 hour)
+     2592000   ; Expire (1 month)
+     86400 )   ; Minimum (1 day)
+  IN NS      super.du.etx.ericsson.se.
+  IN NS      malmen.ericsson.se.
+16 IN PTR gandalf.du.etx.ericsson.se.
+18 IN PTR super-20.du.etx.ericsson.se.
+32 IN PTR lw5.du.etx.ericsson.se.
+64 IN PTR falco.du.etx.ericsson.se.
+65 IN PTR bingo.du.etx.ericsson.se.
+66 IN PTR fingolfin.du.etx.ericsson.se.
+67 IN PTR sam.du.etx.ericsson.se.
+68 IN PTR gwaihir.du.etx.ericsson.se.
+69 IN PTR tom.du.etx.ericsson.se.
+70 IN PTR bilbo.du.etx.ericsson.se.
+71 IN PTR faenor.du.etx.ericsson.se.
+72 IN PTR elrond.du.etx.ericsson.se.
+73 IN PTR legolas.du.etx.ericsson.se.
+74 IN PTR strider.du.etx.ericsson.se.
+75 IN PTR bifur.du.etx.ericsson.se.
+76 IN PTR gimli.du.etx.ericsson.se.
+77 IN PTR orome.du.etx.ericsson.se.
+78 IN PTR aule.du.etx.ericsson.se.
+79 IN PTR balin.du.etx.ericsson.se.
+80 IN PTR gollum.du.etx.ericsson.se.
+81 IN PTR smaug.du.etx.ericsson.se.
+82 IN PTR smeagol.du.etx.ericsson.se.
+83 IN PTR shagrat.du.etx.ericsson.se.
+84 IN PTR boromir.du.etx.ericsson.se.
+85 IN PTR ulmo.du.etx.ericsson.se.
+86 IN PTR mallor.du.etx.ericsson.se.
+87 IN PTR fangorn.du.etx.ericsson.se.
+88 IN PTR gundor.du.etx.ericsson.se.
+89 IN PTR idril.du.etx.ericsson.se.
+192 IN PTR merry.du.etx.ericsson.se.
+193 IN PTR beamish.du.etx.ericsson.se.
+194 IN PTR frodo.du.etx.ericsson.se.
+195 IN PTR thorin.du.etx.ericsson.se.
+196 IN PTR sauron.du.etx.ericsson.se.
+197 IN PTR lightning.du.etx.ericsson.se.
+198 IN PTR melian.du.etx.ericsson.se.
+199 IN PTR elladan.du.etx.ericsson.se.
+200 IN PTR elrohir.du.etx.ericsson.se.
+201 IN PTR ugluk.du.etx.ericsson.se.
+202 IN PTR narya.du.etx.ericsson.se.
+203 IN PTR vilya.du.etx.ericsson.se.
+251 IN PTR router-20.du.etx.ericsson.se.

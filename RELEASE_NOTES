@@ -1,0 +1,91 @@
+
+Release Notes - Eddie 1.5.3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Documentation hasn't kept pace with the code.
+   This mean some documentation is just plain wrong now.
+   [ Some updates on running Eddie below ].
+
+   Documentation should be updated when our tech-writer gets
+   back from holiday!
+
+2. Windows NT doesn't currently work properly with 1.5.3
+
+3. Major changes were made to the Intelligent HTTP Gateway. 
+   A number of separate "relay" processes are now spawned to 
+   handle the relaying of connections to backend boxes.
+   Each of these can handle up to 128 connections and more
+   will be spawned as necessary to handle the connection load.
+   This change also means the individual file descriptor limit
+   does not limit the number of connections the Gateway can handle.
+
+4. File installation and organisation has changed.
+
+   By default configuration files now go into /usr/local/etc.
+   You might want to configure --sysconfdir /etc/eddie (or some such).
+ 
+   The "eddie" and "lbdns" scripts are located in /usr/local/sbin  
+   by default.
+
+5. Starting Eddie.
+
+   Extensive changes have been to the start up process for Eddie.
+ 
+   Once your configuration files are correct (!); starting Eddie
+   should now be as easy as typing "eddie" (assuming it's in your path).
+   Configuration files should probably be synced across all machines
+   (otherwise weirdness can occur).
+ 
+   5A.
+
+   For Eddie to be able to start remote eddie nodes within a cluster
+   you must support ssh or rsh (configure will attempt to identify
+   the appropriate method of connection). On all machines in a cluster
+   eddie must be in the path of the eddie user. [ This might mean
+   editing the "environment" file for .ssh users ]. The "eddie" user
+   must be in group "daemon" to run eddie. As a sysadmin you might
+   want to create a separate group for the eddie user.
+
+   5B.
+
+   You can now start Eddie with rsh/ssh; providing you pre-start
+   Eddie on all nodes within a cluster. On each host within the cluster
+   do the following:
+
+   eddie remote <nodename>@<hostname>
+
+   Then run the "eddie" command.
+
+   5C.
+
+   If you have problems getting Eddie start it may pay to run the eddie in
+   verbose mode by doing following:
+
+   eddie start -v
+ 
+   If this still isn't helpful you may try with "sh -x":
+ 
+   sh -x eddie start -v 
+
+   5D.
+ 
+   If a cluster seems to start but isn't working you can restart
+   an individual node on <hostname> with verbose output by doing 
+   the following:
+
+   eddie force -v <nodename>@<hostname>
+   
+   5E.
+
+   Because of the changes in the Gateway "status" doesn't actually
+   return a lot of useful information (yet).
+   
+
+6. Questions to mickael.remond@erlang-fr.org please! 
+
+
+Geoff
+dredd@users.sourceforge.net
+
+
+

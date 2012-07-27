@@ -1,0 +1,61 @@
+# Author: Sebastian Strollo <seb@erix.ericsson.se>
+# Author: Magnus Fröberg <magnus@erix.ericsson.se>
+#
+# fdsrv is a program that passes open file descriptors between processes using
+# AF_UNIX stream sockets, as described in Stevens UNIX Network programming.
+#
+# Run make {freebsd|linux|sunos5} ERLDIR=/your/erl/dir to compile on your faorite OS.
+#
+PRIV_FILES=../priv/eddie_sig ../priv/fdsrv ../priv/fdsrv_drv.so
+
+ERLDIR=
+
+CC     = gcc
+DEFS   =
+CFLAGS = -Wall -I$(ERLDIR)/usr/include $(DEFS)
+LIBS   = -lnsl -lsocket 
+
+LD_SHARED = ld -G
+
+all: $(PRIV_FILES) 
+
+freebsd:
+	$(MAKE) DEFS=-DHAVE_SYS_ERRLIST LIBS= LD_SHARED="ld -Bshareable" $(TARGET)
+
+linux:
+	$(MAKE) DEFS="-DHAVE_SYS_ERRLIST -DBROKEN_CMSG_FIELDS" LIBS= $(TARGET)
+
+## S.u.S.E. linux
+suse:
+	$(MAKE) DEFS="-DHAVE_SYS_ERRLIST -DBROKEN_CMSG_FIELDS -DHAVE_MSGHDR_MSG_CONTROL" LIBS= $(TARGET)
+
+sunos5:
+	$(MAKE) $(TARGET)
+
+install: ../priv/fdsrv
+	su root -c \
+	  "(chown root ../priv/fdsrv; chmod 4755 ../priv/fdsrv)"
+
+remove:
+	su root -c "rm -f ../priv/fdsrv"
+
+../priv/fdsrv: fdsrv.c
+	$(CC) -o $@ $(CFLAGS) fdsrv.c $(LIBS)
+
+../priv/fdsrv_drv.so: fdsrv_drv.o
+	$(LD_SHARED) -o $@ fdsrv_drv.o
+
+fdsrv_drv.o: fdsrv_drv.c
+	$(CC) -o $@ -c -fpic $(CFLAGS) -DDYNAMIC_DRIVER fdsrv_drv.c
+
+../priv/eddie_sig: eddie_sig.c
+	$(CC) eddie_sig.c -o $@
+
+## Test purposes
+../priv/fdsrv_drv: fdsrv_drv.c
+	$(CC) -o $@ $(CFLAGS) -DTEST fdsrv_drv.c $(LIBS)
+
+clean:
+	rm -f $(PRIV_FILES) *.o *.so *~
+
+

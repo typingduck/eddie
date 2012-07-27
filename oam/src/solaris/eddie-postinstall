@@ -1,0 +1,13 @@
+#!/bin/sh
+echo
+echo "Read the documentation in"
+echo "  $EDDIE_USR_ROOT/lib/eddie/doc"
+echo
+echo "Dont forget to edit $EDDIE_USR_ROOT/etc/eddie.conf"
+echo
+echo "To set eddie up to boot automatically, run the script:"
+echo "  $EDDIE_USR_ROOT/lib/eddie/doc/eddie.setboot"
+echo
+echo "A script also exists to do this for DNS - lbdns.setboot"
+echo
+

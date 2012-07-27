@@ -1,0 +1,50 @@
+#----------------------------------------------------------------------
+# File    : ex1.mig
+# Author  : Michael Rumsbeicz (mpr@eddibeare.org)
+# Purpose : A single computer eddie configuration.
+#           One front end and one back end on the computer europa
+#----------------------------------------------------------------------
+
+DNSServer eddibeare.serc.rmit.edu.au 4567
+
+<Node fe@eva>
+  Interfaces eth0
+  LoadThreshold 0.8 2.0
+</Node>
+
+<Node be@eva>
+  Interfaces eth0
+  LoadThreshold 0.8 2.0
+</Node>
+
+Netmask 255.255.255.255
+
+<Cluster www0101.serc.rmit.edu.au>
+  ClusterType Frontend
+
+  FailoverNodes fe@eva
+  BackendClusters backend0101.serc.rmit.edu.au
+
+  <Server fe@eva>
+    AutoConfig On
+    Interface eth0
+    IPAddress 10.170.42.173
+    Port 80
+    Start generic module eddie start @IPAddress @Port http
+    Stop generic module eddie stop @IPAddress @Port http
+  </Server>
+</Cluster>
+
+<Cluster backend0101.serc.rmit.edu.au>
+  ClusterType Backend
+
+  <Server be@eva>
+    AutoConfig Off
+    IPAddress 10.170.42.171
+    Port 8080
+#    Start generic exec /usr/local/lib/eddie/bin/start_httpd @IPAddress @Port /usr/sbin/httpd /usr/local/lib/eddie/conf
+#    Stop generic exec /usr/local/lib/eddie/bin/stop_httpd @IPAddress @Port
+
+  </Server>
+
+</Cluster>

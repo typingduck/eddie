@@ -1,0 +1,59 @@
+### --------------------------------------------------------------------
+### File    : SKEL-FILE
+### Author  : SKEL-AUTHOR-1
+### Created : SKEL-CREATED
+### Purpose : SKEL-PURPOSE
+###
+### The contents of this file are subject to the Erlang Public License
+### License, Version 1.0, (the "License"); you may not use this file
+### except in compliance with the License. You may obtain a copy of the
+### License at http://www.eddieware.org/EPL
+###
+### Software distributed under the License is distributed on an "AS IS"
+### basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+### the License for the specific language governing rights and limitations
+### under the License.
+###
+### The Original Code is Eddie-0.83b1.
+###
+### The Initial Developer of the Original Code is Ericsson Telecom
+### AB. Portions created by Ericsson are Copyright (C), 1998,1999 Ericsson
+### Telecom AB. All Rights Reserved.
+###
+### Contributor(s): ______________________________________.
+###
+### $Id: makefile.skel,v 1.1 2000/10/27 22:20:27 dredd Exp $ 
+### $Source: /cvsroot/eddie/eddie/skeletons/makefile.skel,v $ 
+### $Revision: 1.1 $ 
+### $Date: 2000/10/27 22:20:27 $ 
+### $State: Exp $ 
+### --------------------------------------------------------------------
+
+# Change path if not the default compiler shall be used
+ERLC = erlc
+
+ERL_FILES = MOD.erl
+JAM_FILES = $(ERL_FILES:.erl=.jam)
+BEAM_FILES = $(ERL_FILES:.erl=.beam)
+
+.SUFFIXES: .3 .html .sgml .jam .beam .erl
+
+.erl.jam:
+        -$(ERLC) -W -b jam $<
+
+.erl.beam:
+        -$(ERLC) -W -b beam $< 
+
+jam: $(JAM_FILES)
+        @echo " *** Compilation finished ***"
+
+beam: $(BEAM_FILES)
+        @echo " *** Compilation finished ***"
+
+sgml: 
+        -sgml_transform -m 3 m.sgml
+        -sgml_transform -html m.sgml
+        @echo " *** SGML processing finished ***"
+
+clean:
+        rm -f *.jam *.beam *sgmls*

@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# Startup script for %PRODUCT_NAME% lbdns
+#
+# chkconfig: - 85 15
+# description: Load-balancing DNS server for %PRODUCT_NAME%
+#
+# 
+
+PATH=$PATH:/usr/local/lib/erlang/bin:/usr/local/sbin
+
+# See how we were called.
+case "$1" in
+  start)
+	echo -n "Starting lbdns: "
+	lbdns start
+	echo
+	;;
+  stop)
+	echo -n "Shutting down lbdns: "
+	lbdns stop
+	echo
+	;;
+  restart)
+	$0 stop
+	$0 start
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit 0

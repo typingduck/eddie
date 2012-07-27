@@ -1,0 +1,9 @@
+EMULATOR=jam
+
+all:
+	cd src;$(MAKE) EMULATOR=$(EMULATOR)
+	cd c_src;$(MAKE) EMULATOR=$(EMULATOR) %TARGET%
+
+clean:
+	cd src;$(MAKE) EMULATOR=$(EMULATOR) clean
+	cd c_src;$(MAKE) EMULATOR=$(EMULATOR) clean

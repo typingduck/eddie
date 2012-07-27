@@ -1,0 +1,62 @@
+(*) Om fråga om MX RR ge A RR's som additional information.
+    Finns det fler typer som kräver detta ?
+
+(*) Om en fråga med samma ID men på en annan UDP port kommer
+    ska den då betraktas som samma fråga ?
+    dig skickar så vid timeout !
+
+(*) Om en data domän pekar på en CNAME, ge syslog utskrift !?
+    Enl. RFC2181 ska man följa en sådan även om de är s.a.s. förbjudna.
+
+(*) Hur ska "load balance" konfigureras ?
+
+(*) dns_catalog borde också lagra info. om response tid per NS och
+    därefter göra val om NS vid iterativa frågor.
+
+(*) Hantera CNAME riktigt vid spawnade recursiva frågor, dvs håll en
+    lista av alla CNAME som frågats om i denna "tråd" och om en
+    dublett dyker upp har vi funnit en loop, error.
+
+(*) Flytta all parsning av master filer till ett ställe, t.ex inet_parse.
+    
+(*) Vid parsning av master filer borde inget lagras på heapen, dvs
+    skicka istället varje data vidare direkt för lagring i databas.
+
+(*) lbnamed, kolla vad den gör igen ;-)
+
+(*) cache endast viss data och anv. endast auth. data som svar.
+    Enl. RFC2181 5.4.1 !
+    Kräver att dns_rr utökas med lite flera fält, eller att fnk byter namn
+    till misc och används till olika saker i cache resp. zone.
+
+(*) Round Robin data borde också lagras per RR (#dns_rr), inte bara A RR's
+    som ska göras round robin.
+
+(*) src AND dst skall vara port 53 mellan DNS servrar enl. BIND FAQ 2.18.
+
+(*) Kolla in RFC2136 "Dynamic updates" och RFC1996 "Change Updates".
+    RFC2065 "DNS Security"
+
+(*) Lastbalansering per BE (relativt FE) istället. Detta ligger dock hos
+    lastinsamlings processen att presentera för DNS servern på ett bra
+    sätt !!
+
+(*) The (BIND) stub directive maybe should be implemented.
+    A stub zone should be marked as nonauthoritative data !
+
+(-) Underscores '_' in domain name.
+    According to DNS FAQ 4.6 it's not allowed, at least checks are done
+    in "The latest version of 'host' checks for illegal characters in A/MX 
+    record names and the NS/MX target names."
+    But in RFC2181 they mention that no restrictions on name should apply.
+    Hmm, for the time being I let '_' be acceptable.
+
+(*) Store secondary zone on backup file.
+
+(*) Change internal structure, i.e. don't have one ets and process per zone.
+
+(*) Change the way bitmap and domain names are stored.
+    Is it possible to use lesser amount of memory ?
+
+(*) Do not store domain names which zones are managed by this server
+    in the cache.

@@ -1,0 +1,81 @@
+#----------------------------------------------------------------------
+# File    : ex3.gate
+# Author  : Michael Rumsewicz (mpr@eddieware.org)
+# Purpose : A configuration with one front end running on europa,
+#           one back end running on eva and one back end running on erika.
+#----------------------------------------------------------------------
+
+<Frontend http>
+
+  ProtocolModule http
+
+  <EndpointConfig http_tcp> 
+    Port 80
+    ReadTimeout 480
+    KeepAliveTimeout 20 
+    ExternalProxy /usr/local/lib/eddie/bin/relay @control_port @ip @port
+  </EndpointConfig>
+
+  AdmitControl true
+
+  AdmitTime 600
+
+  AdmitAlways 150.236.14.*
+
+  AdmitNever 150.236.20.*
+
+  AdmitQueuePlaces 1000
+
+  AdmitMaxSessions 100
+
+  AdmitBlockedPage /eddie_admit_blocked
+
+  AdmitRejectPage /eddie_admit_reject
+
+  AdmitQueuePage /eddie_admit_queue
+
+  <Erlets admit_control>
+    <Erlet erlet_admit_ctrl>
+    </Erlet>
+  </Erlets>
+
+  <Erlets status>
+    <Erlet erlet_status>
+    </Erlet>
+  </Erlets>
+
+  <Backend http_tcp eddieBE@eva>
+    <Schedule>
+      Patterns uri / ^/eddie
+      Proxy 10.170.42.171 8001
+    </Schedule>
+
+    <Schedule>
+      Patterns uri /eddie_status
+      Erlets status
+    </Schedule>
+
+    <Schedule>
+      Patterns uri /eddie_admit
+      Erlets admit_control
+    </Schedule>
+  </Backend>
+
+  <Backend http_tcp eddieBE@erika>
+    <Schedule>
+      Patterns uri / ^/eddie
+      Proxy 10.170.42.170 8001
+    </Schedule>
+
+    <Schedule>
+      Patterns uri /eddie_status
+      Erlets status
+    </Schedule>
+
+    <Schedule>
+      Patterns uri /eddie_admit
+      Erlets admit_control
+    </Schedule>
+  </Backend>
+
+</Frontend>
