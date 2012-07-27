@@ -1,6 +1,11 @@
+
+# Erlang
 .eunit
 deps
 priv
 *.o
 *.beam
 *.plt
+
+# Editor Files
+*.swp
