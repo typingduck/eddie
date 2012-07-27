@@ -39,31 +39,31 @@ Directory Contents
 ## Code
 
 * dns_server/
-    Load-balancing DNS Server.
+        Load-balancing DNS Server.
 * ecmd/
-    C code to to send and receive Erlang messages from the (Unix) command line.
+        C code to to send and receive Erlang messages from the (Unix) command line.
 * eddie_rootdir.erl
 * erfs/
-    Experimental (sounds very experimental) replicated file system (wow, some early erlang gfs??).
+        Experimental (sounds very experimental) replicated file system (wow, some early erlang gfs??).
 * inet_server/
-    Generic inet TCP and/or UDP server that can act as the foundations for Eddie or other HTTP/FTP etc servers.
+        Generic inet TCP and/or UDP server that can act as the foundations for Eddie or other HTTP/FTP etc servers.
 * load_info/
-    Server for distributing machine load average.
+        Server for distributing machine load average.
 * logger/
-    Erlang syslog (yet another!) library.
+        Erlang syslog (yet another!) library.
 * lonelb/
-    TODO.
+        TODO.
 * master/
-    TODO.
+        TODO.
 * misc/
-    C/Erlang library.
+        C/Erlang library.
 * oam/
-    Erlang 'operation and maintenance' support.
+        Erlang 'operation and maintenance' support.
 * servant/
-    TODO.
+        TODO.
 * skeletons/
-    Multiple frameworks of bone, cartilage, or other rigid material supporting or containing the body of an animal or plant.
+        Multiple frameworks of bone, cartilage, or other rigid material supporting or containing the body of an animal or plant.
 * sync_nodes/
-    TODO.
+        TODO.
 * system/
-    TODO.
+        TODO.
